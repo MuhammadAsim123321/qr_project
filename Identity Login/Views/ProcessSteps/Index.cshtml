@@ -1,0 +1,203 @@
+﻿@model IEnumerable<Identity_Login.Models.dbModels.ProcessStep>
+
+@{
+    ViewData["Title"] = "Process Steps";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 ">
+            <h2 class="fw-bold text-primary mb-4 mt-2 ">
+                Job Stages Management
+            </h2>
+            <div class="card shadow-lg border-0 fixed-shadow-table">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Process Steps List</h4>
+                    <a asp-action="Create" class="btn btn-success btn-sm px-3">
+                        <i class="bi bi-plus-circle"></i> Create New
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <table id="processStepsTable" class="display table table-striped " style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Order</th>
+                                <th>Job Process</th>
+                                <th>Stages</th>
+                                <th class="text-end" style="width: 140px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@item.StepOrder</td>
+                                    <td>@item.JobProcess?.Name</td>
+                                    <td>@item.StepName</td>
+                                    <td class="text-end">
+
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger"
+                                                onclick="openDeleteModal(@item.ProcessStepId, '@item.StepName')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalTitle">Confirm Delete</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="deleteConfirmView">
+                    <p class="fs-5">
+                        Are you sure you want to delete <br />
+                        <strong id="deleteTargetName" class="text-danger"></strong>?
+                    </p>
+                </div>
+
+                <div id="deleteErrorView" style="display:none;">
+                    <div class="alert alert-danger border-0 shadow-sm">
+                        <i class="bi bi-exclamation-octagon-fill fs-1 d-block mb-2"></i>
+                        <h5 class="fw-bold">Restriction Applied</h5>
+                        <p id="deleteErrorMessage" class="mb-0"></p>
+                    </div>
+                </div>
+
+                <input type="hidden" id="deleteId" />
+            </div>
+            <div class="modal-footer justify-content-center border-0 pb-4">
+                <div id="deleteConfirmButtons">
+                    <button type="button" class="btn btn-outline-secondary px-4 me-2" data-bs-dismiss="modal">No, Cancel</button>
+                    <button type="button" class="btn btn-danger px-4" onclick="submitDelete()">Yes, Delete</button>
+                </div>
+                <div id="deleteErrorButtons" style="display:none;">
+                    <button type="button" class="btn btn-secondary px-5" data-bs-dismiss="modal">I Understand</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#processStepsTable').DataTable({
+                language: {
+                    search: "Search:",
+                    paginate: { previous: "<", next: ">" }
+                },
+                pagingType: "simple_numbers",
+                paging: true,
+                dom: '<"top"f>rt<"bottom"lp><"clear">'
+            });
+
+            $('.dataTables_length').appendTo('.bottom');
+        });
+
+        // OPEN DELETE MODAL
+        function openDeleteModal(id, name) {
+            $('#deleteId').val(id);
+            $('#deleteTargetName').text(name);
+
+            $('#deleteConfirmView, #deleteConfirmButtons').show();
+            $('#deleteErrorView, #deleteErrorButtons').hide();
+            $('#deleteModalTitle').text("Confirm Delete");
+
+            $('#deleteModal').modal('show');
+        }
+
+        // SUBMIT DELETE
+        function submitDelete() {
+            var id = $('#deleteId').val();
+
+            $.ajax({
+                url: '/ProcessSteps/DeleteProcessStep',
+                type: 'POST',
+                data: { id: id },
+                success: function (response) {
+                    if (response.success) {
+                        $('#deleteModal').modal('hide');
+                        // Reload page to refresh table
+                        location.reload();
+                    } else {
+                        $('#deleteErrorMessage').text(response.message);
+                        $('#deleteConfirmView, #deleteConfirmButtons').hide();
+                        $('#deleteErrorView, #deleteErrorButtons').show();
+                        $('#deleteModalTitle').text("Action Blocked");
+                    }
+                },
+                error: function () {
+                    alert("A server error occurred.");
+                }
+            });
+        }
+    </script>
+}
+
+<style>
+    .dataTables_filter {
+        margin: 0.5rem 0 0.5rem 0;
+        float: right;
+    }
+
+        .dataTables_filter label {
+            font-weight: 500;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dataTables_filter input[type="search"] {
+            border-radius: 24px;
+            padding: 0.5rem 1.2rem;
+            border: 1px solid #ced4da;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            font-size: 1rem;
+            background: #f8f9fa;
+            margin-left: 0.5rem;
+        }
+
+            .dataTables_filter input[type="search"]:focus {
+                border-color: #0d6efd;
+                box-shadow: 0 0 0 0.15rem rgba(13,110,253,.15);
+                background: #fff;
+            }
+
+    .dataTables_length {
+        float: none;
+        margin-bottom: 1rem;
+        margin-top: 1rem;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .dataTables_paginate {
+        margin-top: 1rem !important;
+        display: flex;
+        justify-content: center;
+    }
+
+    .dataTables_wrapper .dataTables_scroll {
+        overflow: auto;
+        max-height: 300px;
+    }
+
+    .dataTables_scrollBody {
+        max-height: 400px !important;
+        overflow-y: auto !important;
+    }
+</style>

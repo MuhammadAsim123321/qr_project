@@ -1,0 +1,366 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - QR-Scanner</title>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Identity_Login.styles.css" asp-append-version="true" />
+    <style>
+        /* Sidebar styles */
+        .sidebar {
+            margin-right:20px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 220px;
+        background: linear-gradient(180deg, #0d6efd 80%, #0a58ca 100%);
+        color: #fff;
+        z-index: 1030;
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+        }
+
+        .sidebar .navbar-brand {
+        color: #fff !important;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 70px;
+        width: 100%;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar .navbar-brand i {
+        font-size: 2rem;
+        margin-right: 0.5rem;
+        }
+
+        .sidebar .nav-link {
+        color: #fff !important;
+        font-weight: 500;
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+        border-radius: 0.5rem;
+        transition: background 0.2s, color 0.2s;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        }
+
+        .sidebar .nav-link.active, .sidebar .nav-link:hover {
+        background: #fff;
+        color: #0d6efd !important;
+        }
+
+        .sidebar .nav-link i {
+        font-size: 1.5rem;
+        min-width: 32px;
+        text-align: center;
+        margin-right: 0.5rem;
+        }
+
+
+        /* Main content padding */
+        .main-content {
+        /* margin-left: 220px; */
+        transition: margin-left 0.2s;
+        }
+        /* Topbar styles */
+        .topbar {
+            margin-bottom:20px;
+        height: 70px;
+        background: #0d6efd;
+        color: #fff;
+        border-bottom: 1px solid #0a58ca;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 1.5rem;
+        position: sticky;
+        top: 0;
+        z-index: 1020;
+        }
+
+        .topbar .navbar-brand {
+        color: #fff !important;
+        font-size: 1.5rem;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        }
+
+        .topbar .navbar-brand i {
+        font-size: 2rem;
+        margin-right: 0.5rem;
+        }
+
+        .topbar .menu-toggle, .topbar .user-toggle {
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 2rem;
+        margin-left: 1rem;
+        }
+
+        .topbar .navbar-nav {
+        flex-direction: row !important;
+        align-items: center;
+        margin-bottom: 0;
+        }
+
+        .topbar .navbar-nav .nav-link {
+        color: #fff !important;
+        font-weight: 500;
+        font-size: 1.1rem;
+        border-radius: 0.5rem;
+        margin-left: 0.5rem;
+        margin-right: 0.5rem;
+        display: flex;
+        align-items: center;
+        transition: color 0.2s, background 0.2s;
+        }
+
+        .topbar .navbar-nav .nav-link:hover,
+        .topbar .navbar-nav .nav-link:focus {
+        background: #fff;
+        color: #0d6efd !important;
+        text-decoration: none;
+        }
+
+        .topbar .dropdown-menu {
+        min-width: 180px;
+        }
+        /* Responsive styles */
+        @@media (max-width: 991.98px) {
+        .sidebar
+
+        {
+        display: none;
+        }
+
+        .main-content {
+        margin-left: 0;
+        }
+
+        .topbar {
+        padding: 0 1rem;
+        }
+
+        }
+        @@media (max-width: 575.98px) {
+        .topbar .navbar-brand
+
+        {
+        font-size: 1.1rem;
+        }
+
+        }
+
+        .dropdown-menu .dropdown-item {
+          
+        color: #0d6efd;
+        font-weight: 500;
+        padding: 0.75rem 1.25rem;
+        border-radius: 0.5rem;
+        transition: background 0.2s, color 0.2s;
+        }
+
+        .dropdown-menu .dropdown-item:hover, .dropdown-menu .dropdown-item:focus {
+        background: #e7f1ff;
+        color: #0a58ca;
+        }
+
+        /* Style login partial inside mobile dropdown */
+        .dropdown-menu .navbar-nav {
+            flex-direction: column !important;
+            width: 100%;
+            padding: 0.25rem 0;
+        }
+
+        .dropdown-menu .nav-link,
+        .dropdown-menu .btn-link {
+            color: #0d6efd !important;
+            font-weight: 500;
+            font-size: 1.05rem;
+            border-radius: 0.5rem;
+            margin: 0.25rem 0.75rem;
+            display: flex;
+            align-items: center;
+            transition: color 0.2s, background 0.2s;
+            text-align: left;
+            background: none;
+        }
+
+            .dropdown-menu .nav-link:hover,
+            .dropdown-menu .btn-link:hover {
+                /* background: #e7f1ff; */
+                color: #0a58ca !important;
+                text-decoration: none;
+            }
+
+    </style>
+</head>
+<body>
+    <!-- Topbar -->
+    <div class="topbar d-flex align-items-center justify-content-between">
+        <a class="navbar-brand" asp-area="" asp-controller="Customer" asp-action="Search">
+            <i class="bi bi-qr-code-scan"></i>
+            QR-Scanner
+        </a>
+        <div class="d-flex align-items-center">
+            <!-- Hamburger menu for mobile -->
+            @if (SignInManager.IsSignedIn(User) && User.IsInRole("Admin"))
+            {
+                <button class="menu-toggle d-lg-none" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Toggle menu">
+                    <i class="bi bi-list"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end d-lg-none">
+                    <li><a class="dropdown-item" asp-area="" asp-controller="RouterJobs" asp-action="Index"><i class="bi bi-briefcase me-2 "></i>Jobs</a></li>
+                @* <li><a class="dropdown-item" asp-area="" asp-controller="StaffStationMappings" asp-action="Index"><i class="bi bi-people me-2"></i>Staff</a></li> *@
+                <li><a class="dropdown-item" asp-area="" asp-controller="Stations" asp-action="Index"><i class="bi bi-geo-alt me-2"></i>Stations</a></li>
+                <li><a class="dropdown-item" asp-area="" asp-controller="ProcessSteps" asp-action="Index"><i class="bi bi-diagram-3 me-2"></i>Job Stages</a></li>
+                <li><a class="dropdown-item" asp-area="" asp-controller="QrScanner" asp-action="Index"><i class="bi bi-upc-scan me-2"></i>QR Scanner</a></li>
+            </ul>
+            }
+            <!-- User icon for login/register -->
+            <div class="dropdown d-lg-none">
+                <button class="user-toggle btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="User menu">
+                    <i class="bi bi-person-circle"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end p-0" style="min-width: 200px;">
+                    <partial name="_LoginPartial" />
+                </div>
+            </div>
+            @* <div class="dropdown d-lg-none"> *@
+            @*     <button class="user-toggle btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="User menu"> *@
+            @*         <i class="bi bi-person-circle"></i> *@
+            @*     </button> *@
+            @*     <ul class="dropdown-menu dropdown-menu-end"> *@
+            @*         <li> *@
+            @*             <a class="dropdown-item" href="/Identity/Account/Login"> *@
+            @*                 <i class="bi bi-box-arrow-in-right me-2"></i>Login *@
+            @*             </a> *@
+            @*         </li> *@
+            @*         <li> *@
+            @*             <a class="dropdown-item" href="/Identity/Account/Register"> *@
+            @*                 <i class="bi bi-person-plus me-2"></i>Register *@
+            @*             </a> *@
+            @*         </li> *@
+            @*     </ul> *@
+            @* </div> *@
+            <!-- Desktop login/register -->
+            <div class="d-none d-lg-block">
+                <partial name="_LoginPartial" />
+            </div>
+        </div>
+    </div>
+    @if (SignInManager.IsSignedIn(User) && User.IsInRole("Admin"))
+    {
+
+    <!-- Sidebar (always expanded on desktop) -->
+    <nav class="sidebar d-none d-lg-flex flex-column align-items-start">
+            <a class="navbar-brand" asp-area="" asp-controller="Customer" asp-action="Search">
+            <i class="bi bi-qr-code-scan"></i>
+            <span class="brand-text">QR-Scanner</span>
+        </a>
+        <ul class="nav flex-column w-100">
+            <li class="nav-item">
+                <a class="nav-link" asp-area="" asp-controller="RouterJobs" asp-action="Index">
+                    <i class="bi bi-briefcase"></i>
+                    <span>Jobs</span>
+                </a>
+            </li>
+            @* <li class="nav-item"> *@
+            @*     <a class="nav-link" asp-area="" asp-controller="StaffStationMappings" asp-action="Index"> *@
+            @*         <i class="bi bi-people"></i> *@
+            @*         <span>Staff</span> *@
+            @*     </a> *@
+            @* </li> *@
+            <li class="nav-item">
+                <a class="nav-link" asp-area="" asp-controller="Stations" asp-action="Index">
+                    <i class="bi bi-geo-alt"></i>
+                    <span>Stations</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-area="" asp-controller="ProcessSteps" asp-action="Index">
+                    <i class="bi bi-diagram-3"></i> 
+                    <span>Job Stages</span> 
+                 </a> 
+             </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-area="" asp-controller="User" asp-action="Index">
+                        <i class="bi bi-person"></i>
+                        <span>Users</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-area="" asp-controller="Search" asp-action="Index">
+                        <i class="bi bi-bucket"></i>
+                        <span>Buckets</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-area="" asp-controller="Shipped" asp-action="Index">
+                        <i class="bi bi-airplane"></i>
+                        <span>Shipped</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-area="" asp-controller="RunType" asp-action="Index">
+                        <i class="bi bi-list-ul"></i>
+                        <span>Run Type</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-area="" asp-controller="MaterialType" asp-action="Index">
+                        <i class="bi bi-intersect"></i>
+                        <span>Material </span>
+                    </a>
+                </li>
+            @* <li class="nav-item"> *@
+            @*     <a class="nav-link" asp-area="" asp-controller="QrScanner" asp-action="Index"> *@
+            @*         <i class="bi bi-upc-scan"></i> *@
+            @*         <span>QR Scanner</span> *@
+            @*     </a> *@
+            @* </li> *@
+            @*     <li class="nav-item"> *@
+            @*         <a class="nav-link" asp-controller="Customer" asp-action="Search"> *@
+            @*             <i class="bi bi-search"></i> Job Search *@
+            @*         </a> *@
+            @*     </li> *@
+        </ul>
+    </nav>
+    }
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container-fluid">
+            <main role="main" class="pb-3">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+    @await Html.PartialAsync("_Notification")
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

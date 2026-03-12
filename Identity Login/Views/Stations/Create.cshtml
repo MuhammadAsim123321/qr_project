@@ -1,0 +1,85 @@
+﻿@model Identity_Login.Models.dbModels.Station
+
+@{
+    ViewData["Title"] = "Create Station";
+    // You need to pass a list of processes to the view via ViewBag.Processes
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Create New Station</h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label fw-bold"></label>
+                            <input asp-for="Name" class="form-control" placeholder="Enter station name" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Choose Process</label>
+                            <select id="ProcessId" name="ProcessId" class="form-select">
+                                <option value="">-- Select Process --</option>
+                                @if (ViewBag.Processes != null)
+                                {
+                                    foreach (var process in ViewBag.Processes as List<Identity_Login.Models.dbModels.JobProcess>)
+                                    {
+                                        <option value="@process.ProcessId">@process.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="ProcessStepId" class="form-label fw-bold">Choose Process Step</label>
+                            <select asp-for="ProcessStepId" class="form-select" id="ProcessStepId">
+                                <option value="">-- Select Process Step --</option>
+                            </select>
+                            <span asp-validation-for="ProcessStepId" class="text-danger"></span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to List
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-plus-circle"></i> Create
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(function () {
+            $('#ProcessId').change(function () {
+                var processId = $(this).val();
+                var processText = $('#ProcessId option:selected').text();
+                var $steps = $('#ProcessStepId');
+                $steps.empty().append('<option value="">-- Select Process Step --</option>');
+                if (processId) {
+                    // If Passivation Process, always use Method 1's ID (2)
+                    if (processText === "Passivation Process") {
+                        processId = 2;
+                    }
+                    $.getJSON('@Url.Action("GetProcessSteps", "Stations")', { processId: processId }, function (data) {
+                        $.each(data, function (i, step) {
+                            $steps.append($('<option>', {
+                                value: step.processStepId,
+                                text: step.stepName
+                            }));
+                        });
+                    });
+                }
+            });
+        });
+    </script>
+}
+

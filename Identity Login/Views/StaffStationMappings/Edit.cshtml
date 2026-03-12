@@ -1,0 +1,57 @@
+﻿@model Identity_Login.Models.dbModels.StaffStationMapping
+
+@{
+    ViewData["Title"] = "Edit Staff-Station Mapping";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Update Staff-Station Mapping</h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        <input type="hidden" asp-for="MappingId" />
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <!-- Application User -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Application User</label>
+                            <select asp-for="ApplicationUser.Id" asp-items="ViewBag.Users" class="form-select">
+                                <option value="">-- Select User --</option>
+                            </select>
+                            <span asp-validation-for="Id" class="text-danger"></span>
+                        </div>
+
+                        <!-- Station -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Station Name</label>
+                            <select asp-for="StationId" asp-items="ViewBag.Stations" class="form-select">
+                                <option value="">-- Select Station --</option>
+                            </select>
+                            <span asp-validation-for="StationId" class="text-danger"></span>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to List
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Update
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

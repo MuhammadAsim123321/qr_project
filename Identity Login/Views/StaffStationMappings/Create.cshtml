@@ -1,0 +1,107 @@
+﻿@model Identity_Login.Models.dbModels.StaffStationMapping
+
+@{
+    ViewData["Title"] = "Create Staff-Station Mapping";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Create Staff-Station Mapping</h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        @* Select Staff  *@
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Staff Name</label>
+                            <select asp-for="Id" asp-items="ViewBag.Users" class="form-select">
+                                <option value="">-- Select Staff --</option>
+                            </select>
+                            <span asp-validation-for="Id" class="text-danger"></span>
+                        </div>
+                          @* Select Stations  *@
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Station Name</label>
+                            <select asp-for="StationId" asp-items="ViewBag.Stations" class="form-select">
+                                <option value="">-- Select Station --</option>
+                            </select>
+                            <span asp-validation-for="StationId" class="text-danger"></span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to List
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-plus-circle"></i> Create
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+@* @model Identity_Login.Models.dbModels.StaffStationMapping *@
+
+@* @{ *@
+@*     ViewData["Title"] = "Create"; *@
+@* } *@
+
+@* <h1>Create</h1> *@
+
+@* <h4>StaffStationMapping</h4> *@
+@* <hr /> *@
+@* <div class="row"> *@
+@*     <div class="col-md-4"> *@
+@*         <form asp-action="Create"> *@
+@*             <div asp-validation-summary="ModelOnly" class="text-danger"></div> *@
+@*             <div class="form-group"> *@
+@*                 <label asp-for="Id" class="control-label"></label> *@
+@*                 <select asp-for="Id" class ="form-control" asp-items="ViewBag.Id"></select> *@
+@*             </div> *@
+@*             <div class="form-group"> *@
+@*                 <label asp-for="StationId" class="control-label"></label> *@
+@*                 <select asp-for="StationId" class ="form-control" asp-items="ViewBag.StationId"></select> *@
+@*             </div> *@
+@*             <div class="form-group"> *@
+@*                 <label asp-for="CreatedOn" class="control-label"></label> *@
+@*                 <input asp-for="CreatedOn" class="form-control" /> *@
+@*                 <span asp-validation-for="CreatedOn" class="text-danger"></span> *@
+@*             </div> *@
+@*             <div class="form-group"> *@
+@*                 <label asp-for="CreatedBy" class="control-label"></label> *@
+@*                 <select asp-for="CreatedBy" class ="form-control" asp-items="ViewBag.CreatedBy"></select> *@
+@*             </div> *@
+@*             <div class="form-group"> *@
+@*                 <label asp-for="UpdatedOn" class="control-label"></label> *@
+@*                 <input asp-for="UpdatedOn" class="form-control" /> *@
+@*                 <span asp-validation-for="UpdatedOn" class="text-danger"></span> *@
+@*             </div> *@
+@*             <div class="form-group"> *@
+@*                 <label asp-for="UpdatedBy" class="control-label"></label> *@
+@*                 <select asp-for="UpdatedBy" class ="form-control" asp-items="ViewBag.UpdatedBy"></select> *@
+@*             </div> *@
+@*             <div class="form-group form-check"> *@
+@*                 <label class="form-check-label"> *@
+@*                     <input class="form-check-input" asp-for="IsDeleted" /> @Html.DisplayNameFor(model => model.IsDeleted) *@
+@*                 </label> *@
+@*             </div> *@
+@*             <div class="form-group"> *@
+@*                 <input type="submit" value="Create" class="btn btn-primary" /> *@
+@*             </div> *@
+@*         </form> *@
+@*     </div> *@
+@* </div> *@
+
+@* <div> *@
+@*     <a asp-action="Index">Back to List</a> *@
+@* </div> *@
+

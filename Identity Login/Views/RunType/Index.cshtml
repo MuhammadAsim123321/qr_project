@@ -1,0 +1,205 @@
+﻿<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Run Type Management</h4>
+                    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addModal">
+                        <i class="bi bi-plus-circle"></i> Add New Run Type
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                            <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Search Run Types...">
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle" id="runTypeTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th class="text-end" style="width: 120px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="runTypeTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5>Add Run Type</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <input type="text" id="addName" class="form-control" placeholder="Enter name...">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="submitAdd()">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5>Edit Run Type</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <input type="hidden" id="editId">
+                <input type="text" id="editName" class="form-control">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" onclick="submitEdit()">Update</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalTitle">Confirm Delete</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="deleteConfirmView">
+                    <p class="fs-5">Are you sure you want to delete <br><strong id="deleteTargetName" class="text-danger"></strong>?</p>
+                </div>
+
+                <div id="deleteErrorView" style="display:none;">
+                    <div class="alert alert-danger border-0 shadow-sm">
+                        <i class="bi bi-exclamation-octagon-fill fs-1 d-block mb-2"></i>
+                        <h5 class="fw-bold">Restriction Applied</h5>
+                        <p id="deleteErrorMessage" class="mb-0"></p>
+                    </div>
+                </div>
+
+                <input type="hidden" id="deleteId">
+            </div>
+            <div class="modal-footer justify-content-center border-0 pb-4">
+                <div id="deleteConfirmButtons">
+                    <button type="button" class="btn btn-outline-secondary px-4 me-2" data-bs-dismiss="modal">No, Cancel</button>
+                    <button type="button" class="btn btn-danger px-4" onclick="submitDelete()">Yes, Delete</button>
+                </div>
+                <div id="deleteErrorButtons" style="display:none;">
+                    <button type="button" class="btn btn-secondary px-5" data-bs-dismiss="modal">I Understand</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            loadRunTypes();
+
+            $("#searchInput").on("keyup", function() {
+                var value = $(this).val().toLowerCase();
+                $("#runTypeTableBody tr").filter(function() {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+            });
+        });
+
+        function loadRunTypes() {
+            $.get('/RunType/GetAllRunTypes', function (data) {
+                let rows = '';
+                data.forEach(item => {
+                    rows += `
+                    <tr>
+                        <td class="run-type-name fw-bold">${item.name}</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-info me-1" onclick="openEditModal(${item.runTypeId}, '${item.name}')">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="openDeleteModal(${item.runTypeId}, '${item.name}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+                });
+                $('#runTypeTableBody').html(rows);
+            });
+        }
+
+        function submitAdd() {
+            let name = $('#addName').val();
+            if(!name) return;
+            $.post('/RunType/CreateRunType', { name: name }, function(res) {
+                if(res.success) {
+                    $('#addModal').modal('hide');
+                    $('#addName').val('');
+                    loadRunTypes();
+                }
+            });
+        }
+
+        function openEditModal(id, name) {
+            $('#editId').val(id);
+            $('#editName').val(name);
+            $('#editModal').modal('show');
+        }
+
+        function submitEdit() {
+            let id = $('#editId').val();
+            let name = $('#editName').val();
+            $.post('/RunType/EditRunType', { id: id, newName: name }, function(res) {
+                if(res.success) {
+                    $('#editModal').modal('hide');
+                    loadRunTypes();
+                }
+            });
+        }
+
+        // OPEN DELETE MODAL
+        function openDeleteModal(id, name) {
+            // Reset modal state
+            $('#deleteId').val(id);
+            $('#deleteTargetName').text(name);
+
+            // Show confirmation UI, hide error UI
+            $('#deleteConfirmView, #deleteConfirmButtons').show();
+            $('#deleteErrorView, #deleteErrorButtons').hide();
+            $('#deleteModalTitle').text("Confirm Delete");
+
+            $('#deleteModal').modal('show');
+        }
+
+        // SUBMIT DELETE
+        function submitDelete() {
+            var id = $('#deleteId').val();
+
+            $.ajax({
+                url: '/RunType/DeleteRunType',
+                type: 'POST',
+                data: { id: id },
+                success: function (response) {
+                    if (response.success) {
+                        $('#deleteModal').modal('hide');
+                        loadRunTypes();
+                    } else {
+                        // SHOW ERROR INSIDE MODAL
+                        $('#deleteErrorMessage').text(response.message);
+                        $('#deleteConfirmView, #deleteConfirmButtons').hide();
+                        $('#deleteErrorView, #deleteErrorButtons').show();
+                        $('#deleteModalTitle').text("Action Blocked");
+                    }
+                },
+                error: function () {
+                    alert("A server error occurred.");
+                }
+            });
+        }
+    </script>
+}

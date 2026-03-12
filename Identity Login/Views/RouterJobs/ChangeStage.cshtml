@@ -1,0 +1,61 @@
+﻿@model Identity_Login.Models.ViewModels.ChangeStageVm
+
+@{
+    ViewData["Title"] = "Change Stage";
+    var currentStageText = "";
+    if (Model.CurrentProcessStepId != null && ViewBag.ProcessSteps is SelectList steps)
+    {
+        var selected = steps.FirstOrDefault(s => s.Value == Model.CurrentProcessStepId.ToString());
+        currentStageText = selected?.Text ?? "";
+    }
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Change Stage for Job </h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="ChangeStage" method="post">
+                        <input type="hidden" asp-for="JobId" />
+                        @if (!string.IsNullOrEmpty(Model.CustomerName))
+                        {
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Customer Name</label>
+                                <div class="form-control-plaintext">@Model.CustomerName</div>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(currentStageText))
+                        {
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Current Stage</label>
+                                <div class="form-control-plaintext">@currentStageText</div>
+                            </div>
+                        }
+                        <div class="mb-3">
+                            <label asp-for="NewProcessStepId" class="form-label fw-bold">Select New Stage</label>
+                            <select asp-for="NewProcessStepId" class="form-select" asp-items="ViewBag.ProcessSteps">
+                                <option value="">-- Select Stage --</option>
+                            </select>
+                            <span asp-validation-for="NewProcessStepId" class="text-danger"></span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to List
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-arrow-repeat"></i> Update Stage
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

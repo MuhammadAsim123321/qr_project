@@ -1,0 +1,134 @@
+﻿
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 ">
+            <h2 class="fw-bold text-primary mb-4 justify-content-center">Shipped </h2>
+            <div class="card shadow-lg border-0 fixed-shadow-table">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Shipped</h4>
+                   
+                </div>
+                <div class="card-body p-0 ">
+                    <div class="table-responsive">
+                        <table id="routerJobsTable" class="display table table-striped " style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Customer </th>
+                                    <th>PO_No</th>
+                                    <th>Qty</th>
+                                    <th>DrawingNo</th>
+                                    <th>Classification</th>
+                                    <th>Current Stage</th>
+                                    <th>Shipped On</th> @* this is UpdatedOnDisplay*@
+
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+@section Scripts {
+    <script>
+            $(document).ready(function () {
+                $('#routerJobsTable').DataTable({
+                    ajax: {
+                        url: '@Url.Action("GetRouterJobsData", "Shipped")',
+                        type: 'GET',
+                        dataType: 'json',
+                        dataSrc: 'data'
+                    },
+                        order: [],
+            columns: [
+                { data: "customerName" },
+                { data: "verbalNo" },
+                { data: "quantity" },
+                { data: "drawingNo" },
+                { data: "classificationName" },
+                { data: "processStep" },
+                { data: "updatedOnDisplay" },
+               
+            ],
+                    language: {
+                        search: "Search:",
+                        paginate: { previous: "<", next: ">" }
+                    },
+                    pagingType: "simple_numbers",
+                    paging: true,
+                    dom: '<"top"f>rt<"bottom"lp><"clear">'
+                });
+
+                $('.dataTables_length').appendTo('.bottom');
+            });
+
+          
+
+    </script>
+}
+
+
+
+
+<style>
+    .dataTables_filter {
+        margin: 0.5rem 0 0.5rem 0;
+        float: right;
+    }
+
+        .dataTables_filter label {
+            font-weight: 500;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dataTables_filter input[type="search"] {
+            border-radius: 24px;
+            padding: 0.5rem 1.2rem;
+            border: 1px solid #ced4da;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            font-size: 1rem;
+            background: #f8f9fa;
+            margin-left: 0.5rem;
+        }
+
+            .dataTables_filter input[type="search"]:focus {
+                border-color: #0d6efd;
+                box-shadow: 0 0 0 0.15rem rgba(13,110,253,.15);
+                background: #fff;
+            }
+
+    .dataTables_length {
+        float: none;
+        margin-bottom: 1rem;
+        margin-top: 1rem;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .dataTables_paginate {
+        margin-top: 1rem !important;
+        display: flex;
+        justify-content: center;
+    }
+
+    .dataTables_wrapper .dataTables_scroll {
+        overflow: auto;
+        max-height: 300px;
+    }
+
+    .dataTables_scrollBody {
+        max-height: 400px !important;
+        overflow-y: auto !important;
+    }
+</style>

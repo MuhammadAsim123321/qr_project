@@ -1,0 +1,99 @@
+﻿@model Identity_Login.Models.ViewModels.CustomerJobSearchViewModel
+
+@{
+    ViewBag.Title = "Job Search";
+}
+
+<div class="container py-4">
+    <div class="row d-flex justify-content-center align-items-center">
+        <div class="col-lg-9">
+            <h2 class="fw-bold text-primary mb-4 mt-5 " style="text-align: center;margin-bottom: 0px !important;">Track your job</h2>
+            <div class="card shadow-sm border-0 mb-4 mt-5" style="margin-top: 0px !important;">
+                <div class="card-body">
+                    <form asp-action="Search" method="post" class="d-flex flex-column align-items-center">
+                      @*   <label class="form-label fw-bolder mb-3">Type your Job Number</label> *@
+                        <input type="text" name="jobNumber" id="jobNumber" autofocus class="form-control form-control-lg mb-3 w-100" style="max-width:800px;" placeholder="Enter your Job Number" required />
+                        <button type="submit" class="btn btn-primary btn-lg px-5" >
+                            <i class="bi bi-search me-2"></i>Search
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger">@ViewBag.Error</div>
+            }
+
+            @if (Model != null && !string.IsNullOrEmpty(Model.JobNumber))
+            {
+                <div class="card shadow border-0 mt-4">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Process: @Model.Process</h4>
+                        <span class="fw-normal">Job Number: @Model.JobNumber</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-bordered mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Order</th>
+                                    <th>Step Name</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var step in Model.Steps)
+                                {
+                                    <tr>
+                                        <td>@step.StepOrder</td>
+                                        <td>@step.StepName</td>
+                                        @* <td> *@
+                                        @*     @if (step.Status == "Completed") *@
+                                        @*     { *@
+                                        @*         <span class="badge bg-success">Completed</span> *@
+                                        @*     } *@
+                                        @*     else *@
+                                        @*     { *@
+                                        @*         <span class="badge bg-warning text-dark">InProgress</span> *@
+                                        @*     } *@
+                                        @* </td> *@
+                                        <td>
+                                            @if (step.Status == "Completed")
+                                            {
+                                                <span class="badge bg-success">Completed</span>
+                                            }
+                                            else if (step.Status == "N/A")
+                                            {
+                                                <span class="badge bg-secondary">N/A</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-warning text-dark">InProgress</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 1.1rem;
+    }
+
+    .card-header {
+        border-top-left-radius: 1.1rem !important;
+        border-top-right-radius: 1.1rem !important;
+    }
+
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.15rem rgba(13,110,253,.15);
+    }
+</style>

@@ -1,0 +1,41 @@
+﻿@model Identity_Login.Models.ApplicationUser
+
+@{
+    ViewData["Title"] = "Delete User";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="mb-0">Delete User</h3>
+                </div>
+                <div class="card-body">
+                    <h5 class="mb-3 text-danger">Are you sure you want to delete this user?</h5>
+                    <dl class="row mb-4">
+                        <dt class="col-sm-4">First Name</dt>
+                        <dd class="col-sm-8">@Model.FirstName</dd>
+                        <dt class="col-sm-4">Last Name</dt>
+                        <dd class="col-sm-8">@Model.LastName</dd>
+                        <dt class="col-sm-4">Email</dt>
+                        <dd class="col-sm-8">@Model.Email</dd>
+                        <dt class="col-sm-4">Station</dt>
+                        <dd class="col-sm-8">@ViewBag.Station</dd>
+                    </dl>
+                    <form asp-action="Delete">
+                        <input type="hidden" asp-for="Id" />
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

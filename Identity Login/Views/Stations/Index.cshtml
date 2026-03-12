@@ -1,0 +1,141 @@
+﻿@model IEnumerable<Identity_Login.Models.dbModels.Station>
+
+@{
+    ViewData["Title"] = "Stations";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 ">
+        <h2 class="fw-bold text-primary mb-4  ">Stations Management</h2>
+            <div class="card shadow-lg border-0 fixed-shadow-table">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Stations List</h4>
+                    <a asp-action="Create" class="btn btn-success btn-sm px-3">
+                        <i class="bi bi-plus-circle"></i> Create New
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <table id="stationsTable" class="display table table-striped " style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Process</th>
+                                <th>Process Step</th>
+                                <th style="width:160px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var table = $('#stationsTable').DataTable({
+                ajax: {
+                    url: '@Url.Action("GetStationsData", "Stations")',
+                    type: 'GET',
+                    dataType: 'json',
+                    dataSrc: 'data'
+                },
+                columns: [
+                    { data: "name" },
+                    { data: "process" },
+                    { data: "processStep" },
+                    {
+                        data: "stationId",
+                        render: function (data, type, row) {
+                            return `
+                                <a href="/Stations/Edit/${data}" class="btn btn-outline-warning btn-sm me-1" title="Edit">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <a href="/Stations/Details/${data}" class="btn btn-outline-info btn-sm me-1" title="Details">
+                                    <i class="bi bi-info-circle"></i>
+                                </a>
+                                <a href="/Stations/Delete/${data}" class="btn btn-outline-danger btn-sm" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            `;
+                        },
+                        orderable: false,
+                        searchable: false
+                    }
+                ],
+                language: {
+                    search: "Search:",
+                    paginate: { previous: "<", next: ">" }
+                },
+                pagingType: "simple_numbers",
+                paging: true,
+                dom: '<"top"f>rt<"bottom"lp><"clear">' 
+            });
+
+            // Move the length selector below the table
+            $('.dataTables_length').appendTo('.bottom');
+        });
+    </script>
+}
+<style>
+
+    /* Style the DataTables search bar */
+    .dataTables_filter {
+        margin: 0.5rem 0 0.5rem 0; /* Top and bottom margin */
+        float: right; /* Align to the right */
+    }
+
+    .dataTables_filter label {
+        font-weight: 500;
+        color: #333;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .dataTables_filter input[type="search"] {
+        border-radius: 24px;
+        padding: 0.5rem 1.2rem;
+        border: 1px solid #ced4da;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        font-size: 1rem;
+        background: #f8f9fa;
+        margin-left: 0.5rem;
+    }
+
+    .dataTables_filter input[type="search"]:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.15rem rgba(13,110,253,.15);
+        background: #fff;
+    }
+    /* Move length selector below table */
+    .dataTables_length {
+        float: none;
+        margin-bottom: 1rem;
+        margin-top: 1rem;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    /* DataTable pagination styling */
+    .dataTables_paginate {
+        margin-top: 1rem !important;
+        display: flex;
+        justify-content: center;
+    }
+
+    /* Fix table height and add scroll */
+    .dataTables_wrapper .dataTables_scroll {
+        overflow: auto;
+        max-height: 300px; /* Set your desired table height */
+    }
+
+    .dataTables_scrollBody {
+        max-height: 400px !important;
+        overflow-y: auto !important;
+    }
+</style>

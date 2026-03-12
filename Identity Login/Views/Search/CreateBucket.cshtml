@@ -1,0 +1,209 @@
+﻿@model Identity_Login.Models.ViewModels.RouterJobEditVm
+
+@{
+    ViewData["Title"] = "Create Bucket";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Create Router Job</h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="CreateBucket" enctype="multipart/form-data" method="post">
+
+                        <input type="hidden" name="sourceJobId" asp-for="JobId" />
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="CustomerName" class="form-label fw-bold">Customer Name</label>
+                                <input asp-for="CustomerName" class="form-control" />
+                                <span asp-validation-for="CustomerName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="ProcessId" class="form-label fw-bold">Job Process</label>
+                                <select asp-for="ProcessId" class="form-select" asp-items="ViewBag.JobProcessList">
+                                    <option value="">-- Select Job Process --</option>
+                                </select>
+                                <span asp-validation-for="ProcessId" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-check form-switch mt-4">
+                                    <input class="form-check-input" type="checkbox" asp-for="DisappearAfterShipped" id="disappearSwitch">
+                                    <label class="form-check-label fw-bold" for="disappearSwitch">
+                                        Disappear after Shipped
+                                    </label>
+                                    <div class="form-text">If checked, this job will be hidden from the main list once status is 'Shipped'.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="PartName" class="form-label fw-bold">Part Name</label>
+                                <input asp-for="PartName" class="form-control" />
+                                <span asp-validation-for="PartName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Upload Image</label>
+                                <input type="file" name="ImageFiles" class="form-control" accept="image/*" multiple />
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="DrawingNo" class="form-label fw-bold">Drawing No</label>
+                                <input asp-for="DrawingNo" class="form-control" />
+                                <span asp-validation-for="DrawingNo" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Date" class="form-label fw-bold"></label>
+                                <input asp-for="Date" type="date" class="form-control" />
+                                <span asp-validation-for="Date" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="VerbalNo" class="form-label fw-bold">Verbal No</label>
+                                <input asp-for="VerbalNo" class="form-control" />
+                                <span asp-validation-for="VerbalNo" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="MaterailId" class="form-label fw-bold">Material</label>
+                                <select asp-for="MaterailId" class="form-select" asp-items="ViewBag.MaterailList">
+                                    <option value="">-- Select Material --</option>
+                                </select>
+                                <span asp-validation-for="MaterailId" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label asp-for="Quantity" class="form-label fw-bold"></label>
+                                <input asp-for="Quantity" class="form-control" type="number" />
+                                <span asp-validation-for="Quantity" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="RCVDBy" class="form-label fw-bold">Received By</label>
+                                <input asp-for="RCVDBy" class="form-control" />
+                                <span asp-validation-for="RCVDBy" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="ShippedBy" class="form-label fw-bold">Shipped By</label>
+                                <input asp-for="ShippedBy" class="form-control" />
+                                <span asp-validation-for="ShippedBy" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label asp-for="RunTypeId" class="form-label fw-bold">Run Type</label>
+                                <select asp-for="RunTypeId" class="form-select" asp-items="ViewBag.RunTypeList">
+                                    <option value="">-- Select Run Type --</option>
+                                </select>
+                                <span asp-validation-for="RunTypeId" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="SurfaceArea" class="form-label fw-bold">Surface Area (IN²)</label>
+                                <input asp-for="SurfaceArea" type="number" class="form-control" />
+                                <span asp-validation-for="SurfaceArea" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="TotalIn2OfRunRight" class="form-label fw-bold">Total IN² of Run</label>
+                                <input asp-for="TotalIn2OfRunRight" type="number" step="any" class="form-control" id="TotalIn2OfRunRight" value="@Model.TotalIn2OfRunRight" />
+                                <span asp-validation-for="TotalIn2OfRunRight" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="ASFId" class="form-label fw-bold">ASF</label>
+                                <select asp-for="ASFId" class="form-select" asp-items="ViewBag.ASFList" id="ASFId">
+                                    <option value="">-- Select ASF --</option>
+                                </select>
+                                <span asp-validation-for="ASFId" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="ClassificationId" class="form-label fw-bold">Classification</label>
+                                <select asp-for="ClassificationId" class="form-select" asp-items="ViewBag.ClassificationList" id="ClassificationId">
+                                    <option value="">-- Select Classification --</option>
+                                </select>
+                                <span asp-validation-for="ClassificationId" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label asp-for="JobDetails" class="form-label fw-bold">Job Description</label>
+                                <textarea asp-for="JobDetails" class="form-control" rows="3"></textarea>
+                                <span asp-validation-for="JobDetails" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to List
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-plus-circle"></i> Create
+                            </button>
+                        </div>
+
+                        @* <div class="d-flex justify-content-between"> *@
+                        @*     <a asp-action="Index" class="btn btn-outline-secondary">Back to List</a> *@
+                        @*     <button type="submit" class="btn btn-primary">Create</button> *@
+                        @* </div> *@
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Populate classification dropdown dynamically
+        function updateClassificationDropdown(setSelectedFromModel) {
+            var asfId = $('#ASFId').val();
+            var processId = $('#ProcessId').val();
+            var $classification = $('#ClassificationId');
+            $classification.empty().append('<option value="">-- Select Classification --</option>');
+
+            $.getJSON('@Url.Action("GetClassifications", "RouterJobs")', { asfId: asfId, processId: processId }, function (data) {
+                $.each(data, function (i, item) {
+                    $classification.append('<option value="' + item.classificationId + '">' + item.name + '</option>');
+                });
+
+                if (setSelectedFromModel) {
+                    var selected = '@Model.ClassificationId';
+                    if (selected && selected !== "0") $classification.val(selected);
+                } else {
+                    $classification.val('');
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            updateClassificationDropdown(true);
+            $('#ASFId, #ProcessId').change(function () { updateClassificationDropdown(false); });
+
+            let manualOverride = false;
+
+            function updateTotalIn2OfRunRight() {
+                if (manualOverride) return;
+                var qty = parseFloat($('#Quantity').val()) || 0;
+                var area = parseFloat($('#SurfaceArea').val()) || 0;
+                if (qty && area) $('#TotalIn2OfRunRight').val((qty * area).toFixed(2));
+            }
+
+            $('#TotalIn2OfRunRight').on('input', function () { manualOverride = true; });
+            $('#Quantity, #SurfaceArea').on('input', function () { manualOverride = false; updateTotalIn2OfRunRight(); });
+        });
+    </script>
+}

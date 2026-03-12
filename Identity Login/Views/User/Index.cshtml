@@ -1,0 +1,152 @@
+﻿@{
+    ViewData["Title"] = "Users";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h2 class="fw-bold text-primary mb-4">Users Management</h2>
+            <div class="card shadow-lg border-0 fixed-shadow-table">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Users List</h4>
+                    <a href="/Identity/Account/Register" class="btn btn-success btn-sm px-3">
+                        <i class="bi bi-plus-circle"></i> Create New
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <table id="usersTable" class="display table table-striped" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>First Name</th>
+                                <th>Last Name</th>
+                                <th>Email</th>
+                                @* <th>Password</th> *@
+                                <th>Station</th>
+                                <th style="width:160px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#usersTable').DataTable({
+                ajax: {
+                    url: '@Url.Action("GetUsersData", "User")',
+                    type: 'GET',
+                    dataType: 'json',
+                    dataSrc: 'data'
+                },
+                columns: [
+                    { data: "firstName" },
+                    { data: "lastName" },
+                    { data: "email" },
+                    // { data: "role" },
+                    // { data: "password" },
+                    { data: "station" },
+                         {
+            data: "id",
+            render: function (data, type, row) {
+                return `
+                    <a href="/User/Edit/${data}" class="btn btn-outline-warning btn-sm me-1" title="Edit">
+                        <i class="bi bi-pencil-square"></i>
+                    </a>
+                    <a href="/User/Details/${data}" class="btn btn-outline-info btn-sm me-1" title="Details">
+                        <i class="bi bi-info-circle"></i>
+                    </a>
+                    <a href="/User/Delete/${data}" class="btn btn-outline-danger btn-sm" title="Delete">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                `;
+            },
+            orderable: false,
+            searchable: false
+        }
+                ],
+                language: {
+                    search: "Search:",
+                    paginate: { previous: "<", next: ">" }
+                },
+                pagingType: "simple_numbers",
+                paging: true,
+                dom: '<"top"f>rt<"bottom"lp><"clear">'
+            });
+        });
+    </script>
+}
+<style>
+    .dataTables_filter {
+        margin: 0.5rem 0 0.5rem 0;
+        float: right;
+    }
+
+        .dataTables_filter label {
+            font-weight: 500;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dataTables_filter input[type="search"] {
+            border-radius: 24px;
+            padding: 0.5rem 1.2rem;
+            border: 1px solid #ced4da;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            font-size: 1rem;
+            background: #f8f9fa;
+            margin-left: 0.5rem;
+        }
+
+            .dataTables_filter input[type="search"]:focus {
+                border-color: #0d6efd;
+                box-shadow: 0 0 0 0.15rem rgba(13,110,253,.15);
+                background: #fff;
+            }
+
+    .dataTables_length {
+        float: none;
+        margin-bottom: 1rem;
+        margin-top: 1rem;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .dataTables_paginate {
+        margin-top: 1rem !important;
+        display: flex;
+        justify-content: center;
+    }
+
+    .dataTables_wrapper .dataTables_scroll {
+        overflow: auto;
+        max-height: 300px;
+    }
+
+    .dataTables_scrollBody {
+        max-height: 400px !important;
+        overflow-y: auto !important;
+    }
+    @@media (min-width: 992px) {
+        .fixed-shadow-table
+
+    {
+        min-width: 1100px;
+        max-width: 1100px;
+        width: 900px;
+        margin: 0 auto;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.10), 0 1.5px 4px rgba(0,0,0,0.10);
+        border: 2px solid #e0e0e0;
+        background: #fff;
+    }
+
+    }
+</style>

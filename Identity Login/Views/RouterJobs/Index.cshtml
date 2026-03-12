@@ -1,0 +1,197 @@
+﻿@{
+    ViewData["Title"] = "Router Jobs";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 ">
+        <h2 class="fw-bold text-primary mb-4 justify-content-center">Router Jobs </h2>
+            <div class="card shadow-lg border-0 fixed-shadow-table">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Router Jobs List</h4>
+                    <a asp-action="Create" class="btn btn-success btn-sm px-3">
+                        <i class="bi bi-plus-circle"></i> Create New
+                    </a>
+                </div>
+                <div class="card-body p-0 ">
+                    <div class="table-responsive">
+                        <table id="routerJobsTable" class="display table table-striped " style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Customer </th>
+                                    <th>PO_No</th>
+                                    <th>Qty</th>
+                                    <th>DrawingNo</th>
+                                    <th>Classification</th>
+                                    <th>Current Stage</th>
+                                    <th>Updated On</th>
+                                    <th style="width:120px;">Actions</th>
+
+                                </tr>
+                            </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#routerJobsTable').DataTable({
+                ajax: {
+                    url: '@Url.Action("GetRouterJobsData", "RouterJobs")',
+                    type: 'GET',
+                    dataType: 'json',
+                    dataSrc: 'data'
+                },
+                    order: [],
+        columns: [
+            { data: "customerName" },     
+            { data: "verbalNo" },         
+            { data: "quantity" },        
+            { data: "drawingNo" },         
+            { data: "classificationName" },
+            { data: "processStep" },       
+            { data: "updatedOnDisplay" },
+            {
+                data: "jobId",             // Actions
+                render: function (data, type, row) {
+                    return `
+                        <div class="d-flex justify-content-end">
+                            <a href="/RouterJobs/Edit/${data}" class="btn btn-outline-warning btn-sm me-1" title="Edit">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <a href="/RouterJobs/Details/${data}" class="btn btn-outline-info btn-sm me-1" title="Details">
+                                <i class="bi bi-info-circle"></i>
+                            </a>
+                            <a href="/RouterJobs/Delete/${data}" class="btn btn-outline-danger btn-sm me-1" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                            <a href="/RouterJobs/DownloadRouterJobPdf/${data}" target="_blank" class="btn btn-outline-success btn-sm download-pdf-btn" title="Download PDF">
+                                <i class="bi bi-download"></i>
+                            </a>
+                                <a href="/RouterJobs/ChangeStage/${data}" class="btn btn-outline-primary btn-sm me-1 ms-1" title="Change Stage">
+                                 <i class="bi bi-arrow-repeat"></i>
+                            </a>
+                        </div>
+                    `;
+                },
+                orderable: false,
+                searchable: false
+            }
+        ],
+                language: {
+                    search: "Search:",
+                    paginate: { previous: "<", next: ">" }
+                },
+                pagingType: "simple_numbers",
+                paging: true,
+                dom: '<"top"f>rt<"bottom"lp><"clear">'
+            });
+
+            $('.dataTables_length').appendTo('.bottom');
+        });
+
+      $(document).on('click', '.download-pdf-btn', function (e) {
+        e.preventDefault();
+
+        var url = $(this).attr('href');
+        var table = $('#routerJobsTable').DataTable();
+
+        var $btn = $(this);
+        $btn.prop('disabled', true).addClass('disabled');
+        $btn.append(' <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to download PDF');
+                }
+
+                const disposition = response.headers.get('Content-Disposition');
+                let fileName = 'RouterJob.pdf';
+                if (disposition && disposition.indexOf('filename=') !== -1) {
+                    const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+                    if (matches != null && matches[1]) fileName = matches[1].replace(/['"]/g, '');
+                }
+
+                return response.blob().then(blob => ({ blob, fileName }));
+            })
+            .then(({ blob, fileName }) => {
+                const blobUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(blobUrl);
+
+                // ✅ Refresh the DataTable
+                table.ajax.reload(null, false);
+            })
+            .catch(error => {
+                console.error('PDF download error:', error);
+                alert('Failed to download PDF.');
+            })
+            .finally(() => {
+                $btn.prop('disabled', false).removeClass('disabled');
+                $btn.find('.spinner-border').remove();
+            });
+    });
+
+    </script>
+}
+<style>
+    .dataTables_filter {
+        margin: 0.5rem 0 0.5rem 0;
+        float: right;
+    }
+    .dataTables_filter label {
+        font-weight: 500;
+        color: #333;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .dataTables_filter input[type="search"] {
+        border-radius: 24px;
+        padding: 0.5rem 1.2rem;
+        border: 1px solid #ced4da;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        font-size: 1rem;
+        background: #f8f9fa;
+        margin-left: 0.5rem;
+    }
+    .dataTables_filter input[type="search"]:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.15rem rgba(13,110,253,.15);
+        background: #fff;
+    }
+    .dataTables_length {
+        float: none;
+        margin-bottom: 1rem;
+        margin-top: 1rem;
+        display: flex;
+        justify-content: flex-end;
+    }
+    .dataTables_paginate {
+        margin-top: 1rem !important;
+        display: flex;
+        justify-content: center;
+    }
+    .dataTables_wrapper .dataTables_scroll {
+        overflow: auto;
+        max-height: 300px;
+    }
+    .dataTables_scrollBody {
+        max-height: 400px !important;
+        overflow-y: auto !important;
+    }
+</style>

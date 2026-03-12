@@ -1,0 +1,83 @@
+﻿@model IEnumerable<Identity_Login.Models.dbModels.JobProcessStage>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.RouterJob)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ProcessStep)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.StageStatus)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CompletedOn)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CreatedOn)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CreatedByUser)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.UpdatedOn)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.UpdatedByUser)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.IsDeleted)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.RouterJob.JobNumber)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ProcessStep.StepName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.StageStatus)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CompletedOn)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CreatedOn)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CreatedByUser.Id)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.UpdatedOn)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.UpdatedByUser.Id)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsDeleted)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.JobProcessStageId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.JobProcessStageId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.JobProcessStageId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

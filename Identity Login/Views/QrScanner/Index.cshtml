@@ -1,0 +1,89 @@
+﻿@{
+    ViewBag.Title = "QR Code Scanner";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <h2 class="fw-bold text-primary mb-4 mt-5 " style="text-align: center;margin-bottom: 0px !important;">QR Code Scanner</h2>
+
+            @* <h2 class="fw-bold text-primary mb-4">QR Code Scanner</h2> *@
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <form asp-action="ScanResult" method="post" class="d-flex flex-column align-items-center">
+                        <label class="form-label fw-bold mb-2">Place cursor in the box, then scan:</label>
+                        <input type="text" name="qrData" id="qrData" autofocus class="form-control form-control-lg mb-3 w-75" style="max-width:400px;" />
+                        @* <button type="submit" class="btn btn-primary btn-lg px-5"> *@
+                        @*     <i class="bi bi-upc-scan me-2"></i>Submit *@
+                        @* </button> *@
+                    </form>
+                </div>
+            </div>
+
+            @if (ViewBag.ShowCard == true && ViewBag.CardData != null)
+            {
+                var card = (Identity_Login.Models.ViewModels.QrScanResultViewModel)ViewBag.CardData;
+                <div class="row justify-content-center mt-4">
+                    <div class="col-lg-10">
+                        <div class="card shadow border-0" style="font-size:1.15rem;">
+                            <div class="card-header bg-primary text-white">
+                                <h4 class="mb-0">QR Scan Successful</h4>
+                            </div>
+                            <div class="card-body py-4">
+                                <dl class="row mb-0">
+                                    <dt class="col-sm-5 fw-bold">Job#:</dt>
+                                    <dd class="col-sm-7">@card.JobNumber</dd>
+                                    <dt class="col-sm-5 fw-bold">Process Step:</dt>
+                                    <dd class="col-sm-7">@card.ProcessStep</dd>
+                                    <dt class="col-sm-5 fw-bold">Status:</dt>
+                                    <dd class="col-sm-7 text-success fw-bold">@card.Status</dd>
+                                    <dt class="col-sm-5 fw-bold">Scanned By:</dt>
+                                    <dd class="col-sm-7">@card.ScannedBy</dd>
+                                </dl>
+                                <div class="text-center mt-4">
+                                    <i class="bi bi-check-circle-fill" style="font-size: 4rem; color: #28a745;"></i>
+                                    <div class="fw-bold text-success mt-2" style="font-size:1.2rem;">Scan Successful!</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+           $(document).ready(function () {
+            $('#qrData').on('input', function () {
+                if ($(this).val().length > 0) {
+                    $(this).closest('form').submit();
+                }
+            });
+        });
+    </script>
+}
+
+<style>
+    /* .qr-heading { */
+    /*     font-size: 40px; */
+    /*     font-weight: bold; */
+    /*     color: #0d6efd; /* Bootstrap primary blue */ */
+    /*     text-align: left; */
+    /*     margin-bottom: 2rem; */
+    /* } */
+    .card {
+        border-radius: 1.1rem;
+    }
+
+    .card-header {
+        border-top-left-radius: 1.1rem !important;
+        border-top-right-radius: 1.1rem !important;
+    }
+
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.15rem rgba(13,110,253,.15);
+    }
+</style>

@@ -1,0 +1,33 @@
+﻿@model Identity_Login.Models.dbModels.StaffStationMapping
+
+@{
+    ViewData["Title"] = "Mapping Details";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Mapping Details</h3>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-4">
+                        <dt class="col-sm-4">Staff Name</dt>
+                        <dd class="col-sm-8">@($"{Model.ApplicationUser?.FirstName} {Model.ApplicationUser?.LastName}")</dd>
+                        <dt class="col-sm-4">Station Name</dt>
+                        <dd class="col-sm-8">@Model.Station?.Name</dd>
+                    </dl>
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to List
+                        </a>
+                        <a asp-action="Edit" asp-route-id="@Model.MappingId" class="btn btn-primary">
+                            <i class="bi bi-pencil-square"></i> Edit
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

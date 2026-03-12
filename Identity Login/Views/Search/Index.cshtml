@@ -1,0 +1,344 @@
+﻿@{
+    ViewData["Title"] = "Router Jobs";
+}
+
+<style>
+    /* Styling to make the search row look like the first item of the dropdown */
+    .dropdown-container {
+        position: relative;
+        width: 220px;
+    }
+
+    .search-box-row {
+        padding: 8px;
+        position: sticky;
+        top: 0;
+        background: #f8f9fa;
+        z-index: 10;
+        border-bottom: 1px solid #ddd;
+    }
+    /* This makes the select act like a container when we add the search row */
+    .custom-select-area {
+        display: none;
+        position: absolute;
+        z-index: 999;
+        background: white;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        width: 100%;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .select-display {
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+        .select-display::after {
+            content: "▼";
+            font-size: 10px;
+            color: #666;
+        }
+
+    .options-list {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .option-item {
+        padding: 8px 12px;
+        cursor: pointer;
+    }
+
+        .option-item:hover {
+            background-color: #0d6efd;
+            color: white;
+        }
+
+        .option-item.hidden {
+            display: none;
+        }
+</style>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h2 class="fw-bold text-primary mb-4">Buckets</h2>
+
+            <div class="mb-3">
+                <label class="form-label">Select Customer:</label>
+                <div class="dropdown-container" id="customerContainer">
+                    <div class="select-display" id="customerToggle">-- Select Value --</div>
+                    <div class="custom-select-area" id="customerMenu">
+                        <div class="search-box-row">
+                            <input type="text" class="form-control form-control-sm" placeholder="Type to search..." onkeyup="filterOptions(this, 'customerItems')">
+                        </div>
+                        <div class="options-list" id="customerItems">
+                        </div>
+                    </div>
+                    <input type="hidden" id="filterSelect" value="">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Select Drawing No:</label>
+                <div class="dropdown-container" id="drawingContainer">
+                    <div class="select-display" id="drawingToggle">-- Select Value --</div>
+                    <div class="custom-select-area" id="drawingMenu">
+                        <div class="search-box-row">
+                            <input type="text" class="form-control form-control-sm" placeholder="Type to search..." onkeyup="filterOptions(this, 'drawingItems')">
+                        </div>
+                        <div class="options-list" id="drawingItems">
+                            <div class="option-item" data-value="">-- Select Value --</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="valueSelect" value="">
+                </div>
+            </div>
+
+            <div class="card shadow-lg border-0 fixed-shadow-table">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Router Jobs List</h4>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table id="routerJobsTable" class="display table table-striped" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>PO_No</th>
+                                    <th>Qty</th>
+                                    <th>DrawingNo</th>
+                                    <th>Classification</th>
+                                    <th>Current Stage</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Function to filter the items based on the search row input
+        function filterOptions(input, listId) {
+            var filter = input.value.toLowerCase();
+            $(`#${listId} .option-item`).each(function() {
+                var text = $(this).text().toLowerCase();
+                $(this).toggleClass('hidden', text.indexOf(filter) === -1 && text !== "-- select value --");
+            });
+        }
+
+        $(document).ready(function () {
+            // Initialize DataTable
+            var table = $('#routerJobsTable').DataTable({
+                ajax: {
+                    url: '@Url.Action("GetResults", "Search")',
+                    data: function (d) {
+                        d.filter = $('#filterSelect').val();
+                        d.value = $('#valueSelect').val();
+                    }
+                },
+                columns: [
+                    { data: "customerName" },
+                    { data: "verbalNo" },
+                    { data: "quantity" },
+                    { data: "drawingNo" },
+                    { data: "classificationName" },
+                    { data: "processStep" },
+                    {
+                        data: null,
+                        render: function (data) {
+                            return `<span class="icon-wrapper" onclick="copyJob(${data.jobId})">
+                                <svg class="action-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                            </span>
+                            <span class="icon-wrapper">
+                                <a href="/Search/Details/${data.jobId}" class="btn btn-outline-info btn-sm me-1" title="Details">
+                                    <i class="bi bi-info-circle"></i>
+                                </a>
+                            </span>`;
+                        }
+                    }
+                ]
+            });
+
+            // Toggle Dropdowns
+            $('#customerToggle, #drawingToggle').on('click', function(e) {
+                e.stopPropagation();
+                var menu = $(this).next('.custom-select-area');
+                $('.custom-select-area').not(menu).hide();
+                menu.toggle();
+            });
+
+            // Close dropdowns when clicking outside
+            $(document).on('click', function() {
+                $('.custom-select-area').hide();
+            });
+
+            // Handle Selection
+            $(document).on('click', '.option-item', function() {
+                var val = $(this).data('value');
+                var text = $(this).text();
+                var container = $(this).closest('.dropdown-container');
+
+                container.find('.select-display').text(text);
+                container.find('input[type="hidden"]').val(val).trigger('change');
+                $('.custom-select-area').hide();
+            });
+
+            // Prevent closing when clicking inside the search box
+            $('.search-box-row').on('click', function(e) {
+                e.stopPropagation();
+            });
+
+            // Reload table and load drawings when customer changes
+            $('#filterSelect').on('change', function () {
+                var selectedFilter = $(this).val();
+                var $drawingItems = $('#drawingItems');
+
+                $drawingItems.html('<div class="option-item">Loading...</div>');
+
+                if (selectedFilter) {
+                    $.ajax({
+                        url: '@Url.Action("GetDistinctValues", "Search")',
+                        type: 'GET',
+                        data: { filter: selectedFilter },
+                        success: function (data) {
+                            $drawingItems.empty().append('<div class="option-item" data-value="">-- Select Value --</div>');
+                            $.each(data, function (i, item) {
+                                $drawingItems.append(`<div class="option-item" data-value="${item.value}">${item.text}</div>`);
+                            });
+                        }
+                    });
+                }
+                table.ajax.reload();
+            });
+
+            // Reload table when drawing changes
+            $('#valueSelect').on('change', function() {
+                table.ajax.reload();
+            });
+
+            function loadCustomers() {
+                $.ajax({
+                    url: '@Url.Action("GetCustomersList", "Customer")',
+                    type: 'GET',
+                    success: function (data) {
+                        var $customerItems = $('#customerItems');
+                        $customerItems.empty().append('<div class="option-item" data-value="">-- Select Value --</div>');
+                        $.each(data, function (i, item) {
+                            $customerItems.append(`<div class="option-item" data-value="${item}">${item}</div>`);
+                        });
+                    }
+                });
+            }
+
+            loadCustomers();
+        });
+
+        function copyJob(id) {
+            window.location.href = '@Url.Action("CreateBucket", "Search")/' + id;
+        }
+    </script>
+}
+    <script>
+
+                     function copyJob(id) {
+            // Use Url.Action to generate correct path
+            window.location.href = '@Url.Action("CreateBucket", "Search")/' + id;
+        }
+
+
+    </script>
+}
+<style>
+    .dataTables_filter {
+        margin: 0.5rem 0 0.5rem 0;
+        float: right;
+    }
+
+        .dataTables_filter label {
+            font-weight: 500;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dataTables_filter input[type="search"] {
+            border-radius: 24px;
+            padding: 0.5rem 1.2rem;
+            border: 1px solid #ced4da;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            font-size: 1rem;
+            background: #f8f9fa;
+            margin-left: 0.5rem;
+        }
+
+            .dataTables_filter input[type="search"]:focus {
+                border-color: #0d6efd;
+                box-shadow: 0 0 0 0.15rem rgba(13,110,253,.15);
+                background: #fff;
+            }
+
+    .dataTables_length {
+        float: none;
+        margin-bottom: 1rem;
+        margin-top: 1rem;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .dataTables_paginate {
+        margin-top: 1rem !important;
+        display: flex;
+        justify-content: center;
+    }
+
+    .dataTables_wrapper .dataTables_scroll {
+        overflow: auto;
+        max-height: 300px;
+    }
+
+    .dataTables_scrollBody {
+        max-height: 400px !important;
+        overflow-y: auto !important;
+    }
+
+
+
+    /* CSS for Action svg */
+    .icon-wrapper {
+        display: inline-block;
+        padding: 6px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s;
+    }
+
+        .icon-wrapper:hover {
+            background: rgba(0, 123, 255, 0.12); /* light blue glow */
+        }
+
+            .icon-wrapper:hover .action-icon {
+                color: #0d6efd; /* icon turns blue */
+            }
+
+</style>
+
+
+

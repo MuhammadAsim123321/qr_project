@@ -1,0 +1,71 @@
+﻿@model Identity_Login.Models.dbModels.ProcessStep
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<h4>ProcessStep</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="ProcessStepId" />
+            <div class="form-group">
+                <label asp-for="ProcessId" class="control-label"></label>
+                <select asp-for="ProcessId" class="form-control" asp-items="ViewBag.ProcessId"></select>
+                <span asp-validation-for="ProcessId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="StepName" class="control-label"></label>
+                <input asp-for="StepName" class="form-control" />
+                <span asp-validation-for="StepName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="StepOrder" class="control-label"></label>
+                <input asp-for="StepOrder" class="form-control" />
+                <span asp-validation-for="StepOrder" class="text-danger"></span>
+            </div>
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="IsOptional" /> @Html.DisplayNameFor(model => model.IsOptional)
+                </label>
+            </div>
+            <div class="form-group">
+                <label asp-for="CreatedOn" class="control-label"></label>
+                <input asp-for="CreatedOn" class="form-control" />
+                <span asp-validation-for="CreatedOn" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CreatedBy" class="control-label"></label>
+                <select asp-for="CreatedBy" class="form-control" asp-items="ViewBag.CreatedBy"></select>
+                <span asp-validation-for="CreatedBy" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="UpdatedOn" class="control-label"></label>
+                <input asp-for="UpdatedOn" class="form-control" />
+                <span asp-validation-for="UpdatedOn" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="UpdatedBy" class="control-label"></label>
+                <select asp-for="UpdatedBy" class="form-control" asp-items="ViewBag.UpdatedBy"></select>
+                <span asp-validation-for="UpdatedBy" class="text-danger"></span>
+            </div>
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="IsDeleted" /> @Html.DisplayNameFor(model => model.IsDeleted)
+                </label>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+

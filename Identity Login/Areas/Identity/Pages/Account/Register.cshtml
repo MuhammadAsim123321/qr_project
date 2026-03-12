@@ -1,0 +1,118 @@
+﻿@page
+@model RegisterModel
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0 text-center">Create An Account</h3>
+                </div>
+                <div class="card-body">
+                    <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                     @*    <div class="fw-normal text-muted text-center mb-4">
+                            If you have already an Account?
+                            <a asp-page="./Login" asp-route-ReturnUrl="@Model.ReturnUrl" class="text-primary fw-bold text-decoration-none">Click Here</a>
+                        </div> *@
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+
+                        <div class="mb-3 row">
+                            <div class="col-md-6">
+                                <label asp-for="Input.FirstName" class="form-label fw-bold"></label>
+                                <input asp-for="Input.FirstName" class="form-control" aria-required="true" placeholder="First Name" />
+                                <span asp-validation-for="Input.FirstName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Input.LastName" class="form-label fw-bold"></label>
+                                <input asp-for="Input.LastName" class="form-control" aria-required="true" placeholder="Last Name" />
+                                <span asp-validation-for="Input.LastName" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Input.Email" class="form-label fw-bold"></label>
+                            <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                            <span asp-validation-for="Input.Email" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3 row">
+                            <div class="col-md-6">
+                                <label asp-for="Input.Password" class="form-label fw-bold"></label>
+                                <input asp-for="Input.Password" class="form-control" aria-required="true" placeholder="Password" />
+                                <span asp-validation-for="Input.Password" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Input.ConfirmPassword" class="form-label fw-bold"></label>
+                                <input asp-for="Input.ConfirmPassword" class="form-control" aria-required="true" placeholder="Confirm Password" />
+                                <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Role</label>
+                            <select asp-for="Input.Role" class="form-select">
+                                <option disabled > Select Role</option>
+                                @foreach (var item in Model.Input.RoleList)
+                                {
+                                    <option value="@item.Value">
+                                        @(item.Value == "Supervisor" ? "Staff" : item.Text)
+                                    </option>
+                                }
+                            </select>
+                            <span asp-validation-for="Input.Role" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3" id="stationDiv">
+                            <label class="form-label fw-bold">Station Name</label>
+                            <select asp-for="Input.StationId" asp-items="@Model.Input.Stations" class="form-select">
+                                <option value="">-- Select Station --</option>
+                            </select>
+                            <span asp-validation-for="Input.StationId" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-page="./Login" asp-route-ReturnUrl="@Model.ReturnUrl" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Login
+                            </a>
+                            <button id="registerSubmit" type="submit" class="btn btn-success">
+                                <i class="bi bi-plus-circle"></i> Register
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+              $(document).ready(function () {
+            function toggleStationDiv() {
+                var role = $("#Input_Role").val();
+                if (role === "Supervisor") {
+                    $("#stationDiv").show();
+                } else {
+                    $("#stationDiv").hide();
+                }
+            }
+            toggleStationDiv();
+            $("#Input_Role").change(function () {
+                toggleStationDiv();
+            });
+
+            // Client-side validation for station selection
+            $("#registerForm").submit(function (e) {
+                var role = $("#Input_Role").val();
+                var station = $("#Input_StationId").val();
+                if (role === "Supervisor" && (!station || station === "" || station === "0")) {
+                    toastr.error("Station selection is required for Staff/ Supervisor role.");
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+}

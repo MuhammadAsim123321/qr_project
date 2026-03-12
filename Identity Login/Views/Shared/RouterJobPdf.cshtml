@@ -1,0 +1,202 @@
+﻿@model Identity_Login.Models.ViewModels.RouterjobPdfVM
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Router Job PDF</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .heading {
+            text-align: center;
+            font-weight: bold;
+            font-size: 26px;
+            margin-bottom: 50px;
+            text-transform: uppercase;
+        }
+
+        .label {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+
+        .field {
+            background: #eef3ff; /* Light blue */
+            border: 1px solid #b0c4de;
+            display: inline-block;
+            border-bottom: 1px solid #000;
+            min-width: 200px;
+            padding: 2px 5px;
+            background-color: #f3f8fd;
+            border-radius: 4px;
+        }
+
+        .line {
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+        td {
+            padding: 4px 0px;
+            vertical-align: bottom;
+        }
+
+        .footer-img {
+            display: block;
+            margin: 40px auto 0;
+            max-width: 200px;
+        }
+
+        .job-details-area {
+            width: 100%;
+            margin: 40px 0 20px 0;
+        }
+
+        .job-details-text {
+            min-height: 20px; /* about 2-3 lines */
+            max-height: 200px;
+            padding: 12px;
+            border: 1.5px solid #b0c4de;
+            border-radius: 6px;
+            background: #f3f8fd;
+            font-size: 18px;
+            white-space: pre-wrap;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    @if (!string.IsNullOrEmpty(Model.QrCodeBase64))
+    {
+        <div style="position: absolute; top: 20px; right: 20px; z-index: 10;">
+            <img src="@Model.QrCodeBase64" alt="QR Code" style="width: 150px; height: 150px;" />
+        </div>
+    }
+    <!-- Heading -->
+    <div class="heading" style="margin-bottom:50px; background: yellow;">@(!string.IsNullOrEmpty(Model.JobProcessName) ? Model.JobProcessName + " ROUTER" : "QTA ANODIZING ROUTER")</div>
+
+    <!-- CUSTOMER NAME -->
+    <div class="line mt-5">
+        <span class="label">Customer: </span>
+        <span class="field " style="min-width:350px;">@Model.CustomerName</span>
+    </div>
+
+    <!-- PART NAME -->
+    <div class="line">
+        <span class="label">Part Name: </span>
+        <span class="field" style="min-width:350px;">@Model.PartName</span>
+    </div>
+
+    <!-- DRAWING # and DATE -->
+    <table>
+        <tr>
+            <td><span class="label">Drawing No: </span><span class="field" style="min-width:300px;">@Model.DrawingNo</span></td>
+            <td><span class="label">Date: </span><span class="field">@Model.Date?.ToString("yyyy-MM-dd")</span></td>
+        </tr>
+    </table>
+
+    <!-- PO/VERBAL and MATERIAL -->
+    <table>
+        <tr>
+            <td><span class="label">PO/Verbal: </span><span class="field" style="min-width:300px;">@Model.VerbalNo</span></td>
+            <td><span class="label">Material: </span><span class="field">@Model.MaterailName</span></td>
+        </tr>
+    </table>
+
+
+
+    <!-- QNT RAN, RCVD BY, SHIPPED BY -->
+
+    <table style="width:100%; border-collapse:collapse; table-layout:fixed; margin-bottom:20px;">
+        <tr>
+            <td style="width:18%; vertical-align:top; padding-right:10px; word-break:break-word;">
+                <span class="label">QNT RAN: </span>
+                <span class="field" style="min-width:50px;">@Model.Quantity</span>
+            </td>
+            <td style="width:41%; vertical-align:top; padding-right:10px; word-break:break-word;">
+                <span class="label">Received By: </span>
+                <span class="field">@Model.RCVDBy</span>
+            </td>
+            <td style="width:41%; vertical-align:top; word-break:break-word;">
+                <span class="label">Shipped By: </span>
+                <span class="field">@Model.ShippedBy</span>
+            </td>
+        </tr>
+    </table>
+    <!-- RUN TYPE ,PARTS -->
+    <table>
+        <tr>
+            <td>
+                <span class="label">Run Type: </span>
+                <span class="field" style="min-width:350px; background: yellow; color: black;">@Model.RunTypeName</span>
+            </td>
+            <td><span class="label">Parts: </span><span class="field">PICK-UP</span></td>
+        </tr>
+    </table>
+
+    <div class="line">
+        <span class="field" style=" min-width:100px; color: red; ">@Model.ASFName</span> &nbsp; &nbsp;
+        <span class="field" style="background: yellow; border-bottom: 2px solid red; min-width:400px;">@Model.ClassificationName</span>
+    </div>
+    <!-- EXTRA HARDCODED LINES -->
+    <div class="line">
+        <span class="label">Single Part Surface Area IN²: </span><span class="field">@Model.SurfaceArea</span> &nbsp;
+    </div>
+
+    <div class="line">
+        <span class="label">TOTAL IN² of Run: </span><span class="field">@Model.TotalIn2OfRun</span> &nbsp; = &nbsp;
+        <span class="field" style="min-width:100px;">@Model.TotalIn2OfRunRight</span>
+    </div>
+
+    <div class="line">
+        <span class="label">TOTAL AMPS: </span><span class="field" style="background: #fff7a8; font-weight: bold;">@Model.AMPS</span> &nbsp;
+        <span class="label">AMPS/PART: </span><span class="field" style="background: #fff7a8; font-weight: bold;">@Model.AMPSPerParts</span>
+    </div>
+
+    <div class="line">
+        <span class="label">Time(MIN): </span><span class="field" style="background: #fff9b1; font-weight: bold;">@Model.TimeMinutes</span> &nbsp;
+        <span class="label">Time(SEC): </span><span class="field" style="background: #fff9b1; font-weight: bold;">@Model.TimeSeconds</span>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.JobDetails))
+    {
+        <div class="job-details-area">
+            <label class="label" style="display:block; margin-bottom:20px;">Description:</label>
+            <div class="job-details-text">@Model.JobDetails</div>
+        </div>
+    }
+    @if (Model.UploadImageBase64List != null && Model.UploadImageBase64List.Any())
+    {
+        <div style="width:100%; text-align:center; margin-top:2px;">
+            @foreach (var imgBase64 in Model.UploadImageBase64List)
+            {
+                <img src="@imgBase64" alt="Job Image" style="max-width:600px; max-height:300px; margin:4px;" />
+            }
+        </div>
+    }
+    else
+    {
+        <div style="width:100%; text-align:center; margin-top:2px;">
+            <span style="color: #888;">No image uploaded</span>
+        </div>
+    }
+
+
+</body>
+</html>
+
