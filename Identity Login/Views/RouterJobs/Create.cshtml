@@ -277,25 +277,23 @@
             function updateCalculatedFields() {
                 var qty = parseFloat($('#Quantity').val()) || 0;
                 var area = parseFloat($('#SurfaceArea').val()) || 0;
-                var asfText = $('#ASFId option:selected').text();
-                var asfConstant = asfText.includes('16') ? (1.0/9.0) : (1.0/12.0);
-                // var asfConstant = asfText.includes('16') ? 0.11 : 0.08333;
+                var asfId = $('#ASFId').val();
+                var asfText = $('#ASFId option:selected').text().trim();
                 var totalIn2 = parseFloat($('#TotalIn2OfRunRight').val()) || (qty * area);
 
-                // var minutes = parseInt($('#ClassificationId option:selected').data('minutes')) || 0;
+                var selectedProcess = $('#ProcessId option:selected').text();
+                var minutes = selectedProcess.includes("Black Oxide Process") ? 15 : (parseInt($('#ClassificationId option:selected').data('minutes')) || 0);
 
-                // $('#AMPS').val((totalIn2 * asfConstant).toFixed(3));
-                        var selectedProcess = $('#ProcessId option:selected').text();
-        var minutes = 0;
+                // For 8 ASF (ASFId = 1), use division by 18; otherwise use standard formula
+                if (asfId === '1' || asfText.toLowerCase().includes('8 asf') || asfText.toLowerCase().startsWith('8')) {
+                    $('#AMPS').val((totalIn2 / 18.0).toFixed(3));
+                    $('#AMPSPerParts').val((area / 18.0).toFixed(3));
+                } else {
+                    var asfConstant = asfText.includes('16') ? (1.0/9.0) : (1.0/12.0);
+                    $('#AMPS').val((totalIn2 * asfConstant).toFixed(3));
+                    $('#AMPSPerParts').val((area * asfConstant).toFixed(3));
+                }
 
-        if (selectedProcess.includes("Black Oxide Process")) {
-            minutes = 15;
-        } else {
-            minutes = parseInt($('#ClassificationId option:selected').data('minutes')) || 0;
-        }
-
-        $('#AMPS').val((totalIn2 * asfConstant).toFixed(3));
-                $('#AMPSPerParts').val((area * asfConstant).toFixed(3));
                 $('#TimeMinutes').val(minutes);
                 $('#TimeSeconds').val(minutes * 60);
             }

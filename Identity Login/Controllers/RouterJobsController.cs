@@ -153,14 +153,15 @@ namespace Identity_Login.Controllers
             }
 
             var totalIn2OfRun = (double)(job.Quantity * (job.SurfaceArea ?? 0));
-            double asfBasedConstant = 1.0 / 12.0;
-            if (job.ASF != null && job.ASF.Name.Contains("16"))
-            {
-                asfBasedConstant = 1.0 / 9.0;
-            }
-            var amps = Math.Round(totalIn2OfRun * asfBasedConstant, 3);
-            var ampsPerParts = Math.Round((job.SurfaceArea ?? 0) * asfBasedConstant, 3);
-
+            double asfBasedConstant = job.ASF != null && job.ASF.Name.Contains("16") ? 1.0 / 9.0 : 1.0 / 12.0;
+            
+            // For 8 ASF, use division by 18; for other ASF, use multiplication
+            var amps = job.ASF != null && job.ASF.Name.Contains("8") 
+                ? Math.Round(totalIn2OfRun / 18.0, 3)
+                : Math.Round(totalIn2OfRun * asfBasedConstant, 3);
+            var ampsPerParts = job.ASF != null && job.ASF.Name.Contains("8")
+                ? Math.Round((job.SurfaceArea ?? 0) / 18.0, 3)
+                : Math.Round((job.SurfaceArea ?? 0) * asfBasedConstant, 3);
 
             var model = new RouterjobPdfVM
             {
@@ -207,20 +208,15 @@ namespace Identity_Login.Controllers
             var totalIn2OfRun = (double)(job.Quantity * (job.SurfaceArea ?? 0));
             var totalIn2OfRunRight = job.TotalIn2OfRunRight;
 
-            double asfBasedConstant = 1.0 / 12.0;
-            if (job.ASF != null && job.ASF.Name.Contains("16"))
-            {
-                asfBasedConstant = 1.0 / 9.0;
-            }
+            double asfBasedConstant = job.ASF != null && job.ASF.Name.Contains("16") ? 1.0 / 9.0 : 1.0 / 12.0;
 
-            //var asfBasedConstant = 0.08333;
-            //if(job.ASF != null && job.ASF.Name.Contains("16"))
-            //{
-            //    asfBasedConstant = 0.11;
-            //}
-
-            var amps = Math.Round((totalIn2OfRunRight ?? 0.0) * asfBasedConstant, 3);
-            var ampsPerParts = Math.Round((job.SurfaceArea ?? 0) * asfBasedConstant, 3);
+            // For 8 ASF, use division by 18; for other ASF, use multiplication
+            var amps = job.ASF != null && job.ASF.Name.Contains("8")
+                ? Math.Round((totalIn2OfRunRight ?? 0.0) / 18.0, 3)
+                : Math.Round((totalIn2OfRunRight ?? 0.0) * asfBasedConstant, 3);
+            var ampsPerParts = job.ASF != null && job.ASF.Name.Contains("8")
+                ? Math.Round((job.SurfaceArea ?? 0) / 18.0, 3)
+                : Math.Round((job.SurfaceArea ?? 0) * asfBasedConstant, 3);
 
             // Flags for hiding
             bool hideRunTypeAndSurface = false;
@@ -545,8 +541,13 @@ namespace Identity_Login.Controllers
                 // Calculated fields:
                 TimeMinutes = job.Classification?.Minutes,
                 TimeSeconds = (job.Classification?.Minutes ?? 0) * 60,
-                AMPS = (job.TotalIn2OfRunRight ?? 0) * (job.ASF != null && job.ASF.Name.Contains("16") ? (1.0 / 9.0) : (1.0 / 12.0)),
-                AMPSPerParts = (job.SurfaceArea ?? 0) * (job.ASF != null && job.ASF.Name.Contains("16") ? (1.0 / 9.0) : (1.0 / 12.0))
+                // For 8 ASF, use division by 18; for other ASF, use multiplication
+                AMPS = (job.ASF != null && job.ASF.Name.Contains("8")) 
+                    ? ((job.TotalIn2OfRunRight ?? 0) / 18.0)
+                    : ((job.TotalIn2OfRunRight ?? 0) * (job.ASF != null && job.ASF.Name.Contains("16") ? (1.0 / 9.0) : (1.0 / 12.0))),
+                AMPSPerParts = (job.ASF != null && job.ASF.Name.Contains("8"))
+                    ? ((job.SurfaceArea ?? 0) / 18.0)
+                    : ((job.SurfaceArea ?? 0) * (job.ASF != null && job.ASF.Name.Contains("16") ? (1.0 / 9.0) : (1.0 / 12.0)))
 
             };
 
