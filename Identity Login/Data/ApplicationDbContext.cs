@@ -58,7 +58,7 @@ namespace Identity_Login.Data
 
             builder.Entity<Classification>().HasData(
                 new Classification { ClassificationId = 1, Name = "Type I, Class 1 (CLEAR)", Minutes = 12 },
-                new Classification { ClassificationId = 2, Name = "Type II, Class 1 (CLEAR)", Minutes = 27 },
+                new Classification { ClassificationId = 2, Name = "Type II, Class 1 (CLEAR)", Minutes = 18 },
                 new Classification { ClassificationId = 3, Name = "Type II, Class 2 (BLACK)", Minutes = 45 },
                 new Classification { ClassificationId = 4, Name = "Type II, Class 2 (BLUE-A)", Minutes = 38 },
                 new Classification { ClassificationId = 5, Name = "Type II, Class 2 (BORDEAUX RED)", Minutes = 38 },

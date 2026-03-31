@@ -496,6 +496,39 @@
         });</script>
 
 
+    <script>
+        $(document).ready(function () {
+            function updateTimeLogic() {
+                var asfText = $('#ASFId option:selected').text().trim();
+                var classificationText = $('#ClassificationId option:selected').text().trim();
+                var selectedProcess = $('#ProcessId option:selected').text();
+
+                // Get base minutes from data attribute
+                var baseMinutes = parseInt($('#ClassificationId option:selected').data('minutes')) || 0;
+                var finalMinutes = baseMinutes;
+
+                // Apply specific logic: If ASF contains "8" and Classification is "Type II, Class 1 (CLEAR)"
+                if (asfText.includes("8") && classificationText === "Type II, Class 1 (CLEAR)") {
+                    finalMinutes = 27;
+                }
+                // Keep your existing override for Black Oxide
+                else if (selectedProcess.includes("Black Oxide Process")) {
+                    finalMinutes = 15;
+                }
+
+                $('#TimeMinutes').val(finalMinutes);
+                $('#TimeSeconds').val(finalMinutes * 60);
+            }
+
+            // Bind to the dropdowns that trigger the logic
+            $('#ASFId, #ClassificationId, #ProcessId').on('change', updateTimeLogic);
+
+            // Run on load
+            updateTimeLogic();
+        });
+    </script>
+
+
 
 
 }
