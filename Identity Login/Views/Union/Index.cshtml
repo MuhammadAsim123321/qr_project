@@ -1,0 +1,255 @@
+﻿@{
+    ViewData["Title"] = "Join Customers";
+}
+
+<style>
+    /* Dropdown Styling */
+    .dropdown-container {
+        position: relative;
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .select-display {
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+        .select-display::after {
+            content: "▼";
+            font-size: 10px;
+            color: #666;
+        }
+
+    .custom-select-area {
+        display: none;
+        position: absolute;
+        z-index: 999;
+        background: white;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        width: 100%;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .search-box-row {
+        padding: 8px;
+        position: sticky;
+        top: 0;
+        background: #f8f9fa;
+        z-index: 10;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .options-list {
+        max-height: 250px;
+        overflow-y: auto;
+    }
+
+    .option-item {
+        padding: 8px 12px;
+        cursor: pointer;
+    }
+
+        .option-item:hover {
+            background-color: #0d6efd;
+            color: white;
+        }
+
+        .option-item.hidden {
+            display: none;
+        }
+
+    /* UI Toast Notifications */
+    #statusMessage {
+        display: none;
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+        min-width: 300px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    /* UI Confirmation Overlay */
+    #confirmOverlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.4);
+        z-index: 9999;
+    }
+
+    .confirm-card {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 25px;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 400px;
+    }
+</style>
+
+<div id="statusMessage" class="alert alert-dismissible fade show" role="alert">
+    <span id="statusText"></span>
+    <button type="button" class="btn-close" onclick="$('#statusMessage').fadeOut()"></button>
+</div>
+
+<div id="confirmOverlay">
+    <div class="confirm-card shadow-lg text-center">
+        <h5 class="fw-bold text-danger mb-3">Confirm Merge</h5>
+        <p class="text-muted">This action is permanent and cannot be undone. Are you sure you want to proceed?</p>
+        <div class="d-flex justify-content-center gap-2 mt-4">
+            <button type="button" class="btn btn-light border" id="btnCancel">Cancel</button>
+            <button type="button" class="btn btn-danger" id="btnConfirm">Yes, Merge</button>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white py-3 text-center">
+                    <h5 class="mb-0">Combine Customer</h5>
+                </div>
+                <div class="card-body p-4">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase">Primary Customer (Keep)</label>
+                        <div class="dropdown-container">
+                            <div class="select-display customerToggle">-- Select Value --</div>
+                            <div class="custom-select-area">
+                                <div class="search-box-row">
+                                    <input type="text" class="form-control form-control-sm" placeholder="Search..." onkeyup="filterOptions(this)">
+                                </div>
+                                <div class="options-list customerItems"></div>
+                            </div>
+                            <input type="hidden" id="primaryCustomerId">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-uppercase text-danger">Customer to Merge (Delete)</label>
+                        <div class="dropdown-container">
+                            <div class="select-display customerToggle">-- Select Value --</div>
+                            <div class="custom-select-area">
+                                <div class="search-box-row">
+                                    <input type="text" class="form-control form-control-sm" placeholder="Search..." onkeyup="filterOptions(this)">
+                                </div>
+                                <div class="options-list customerItems"></div>
+                            </div>
+                            <input type="hidden" id="mergeCustomerId">
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="button" class="btn btn-primary btn-lg" id="btnInitiateMerge">Merge Customers</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showStatus(message, type = 'info') {
+            const $msg = $('#statusMessage');
+            $msg.removeClass('alert-danger alert-success alert-info alert-warning').addClass('alert-' + type);
+            $('#statusText').text(message);
+            $msg.fadeIn().delay(3000).fadeOut();
+        }
+
+        function filterOptions(input) {
+            var filter = input.value.toLowerCase();
+            $(input).closest('.custom-select-area').find('.option-item').each(function() {
+                var text = $(this).text().toLowerCase();
+                $(this).toggleClass('hidden', text.indexOf(filter) === -1 && text !== "-- select value --");
+            });
+        }
+
+        $(document).ready(function () {
+            // Dropdown Toggles
+            $(document).on('click', '.customerToggle', function(e) {
+                e.stopPropagation();
+                var menu = $(this).next('.custom-select-area');
+                $('.custom-select-area').not(menu).hide();
+                menu.toggle();
+            });
+
+            $(document).on('click', function() { $('.custom-select-area').hide(); });
+            $('.search-box-row').on('click', function(e) { e.stopPropagation(); });
+
+            // Handle Item Selection
+            $(document).on('click', '.option-item', function() {
+                var val = $(this).data('value');
+                var text = $(this).text();
+                var container = $(this).closest('.dropdown-container');
+                container.find('.select-display').text(text);
+                container.find('input[type="hidden"]').val(val);
+                $('.custom-select-area').hide();
+            });
+
+            // Step 1: Open Custom Confirmation Overlay
+            $('#btnInitiateMerge').on('click', function() {
+                var pId = $('#primaryCustomerId').val();
+                var mId = $('#mergeCustomerId').val();
+
+                if(!pId || !mId) { showStatus("Please select both customers.", "warning"); return; }
+                if(pId === mId) { showStatus("Cannot merge a customer into itself.", "danger"); return; }
+
+                $('#confirmOverlay').fadeIn();
+            });
+
+            // Step 2: Cancel Merge
+            $('#btnCancel').on('click', function() { $('#confirmOverlay').fadeOut(); });
+
+            // Step 3: Perform Actual Merge
+            $('#btnConfirm').on('click', function() {
+                $('#confirmOverlay').hide();
+                showStatus("Processing merge...", "info");
+
+                $.post('@Url.Action("MergeCustomers", "Union")', {
+                    primaryCustomer: $('#primaryCustomerId').val(),
+                    mergeCustomer: $('#mergeCustomerId').val(),
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                }, function(res) {
+                    showStatus("Merge completed successfully!", "success");
+                    setTimeout(() => location.reload(), 1200);
+                }).fail(function() {
+                    showStatus("Server error during merge.", "danger");
+                });
+            });
+
+            function loadCustomers() {
+                $.ajax({
+                    url: '@Url.Action("GetCustomersList", "Customer")',
+                    type: 'GET',
+                    success: function (data) {
+                        var $lists = $('.customerItems');
+                        $lists.empty().append('<div class="option-item" data-value="">-- Select Value --</div>');
+                        $.each(data, function (i, item) {
+                            $lists.append(`<div class="option-item" data-value="${item}">${item}</div>`);
+                        });
+                    }
+                });
+            }
+
+            loadCustomers();
+        });
+    </script>
+}
