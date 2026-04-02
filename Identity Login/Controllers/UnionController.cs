@@ -33,7 +33,7 @@ namespace Identity_Login.Controllers
             try
             {
                 var jobsToUpdate = await _context.RouterJobs
-                    .Where(j => j.CustomerName == mergeCustomer)
+                    .Where(j => j.CustomerName.ToLower() == mergeCustomer.ToLower())
                     .ToListAsync();
 
                 if (jobsToUpdate.Count == 0)
