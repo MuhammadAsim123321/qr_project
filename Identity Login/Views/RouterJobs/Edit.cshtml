@@ -1,4 +1,4 @@
-﻿@model Identity_Login.Models.ViewModels.RouterJobEditVm
+@model Identity_Login.Models.ViewModels.RouterJobEditVm
 
 @{
     ViewData["Title"] = "Edit Router Job";
@@ -260,7 +260,19 @@
             var asfId = $('#ASFId').val();
             var asfText = $('#ASFId option:selected').text().trim();
             var totalIn2 = parseFloat($('#TotalIn2OfRunRight').val()) || (qty * area);
-            var minutes = parseInt($('#ClassificationId option:selected').data('minutes')) || 0;
+            var selectedProcess = $('#ProcessId option:selected').text();
+            var classificationId = $('#ClassificationId').val();
+            var classificationText = $('#ClassificationId option:selected').text().trim();
+            var baseMinutes = parseInt($('#ClassificationId option:selected').data('minutes')) || 0;
+            var isAsf8 = asfId === '1' || asfText.toLowerCase().includes('8 asf') || asfText.toLowerCase().startsWith('8');
+            var isType2Class1Clear = classificationId === '2' || classificationText === "Type II, Class 1 (CLEAR)";
+            var minutes = baseMinutes;
+
+            if (isAsf8 && isType2Class1Clear) {
+                minutes = 27;
+            } else if (selectedProcess.includes("Black Oxide Process")) {
+                minutes = 15;
+            }
 
             // For 8 ASF (ASFId = 1), use division by 18; otherwise use standard formula
             if (asfId === '1' || asfText.toLowerCase().includes('8 asf') || asfText.toLowerCase().startsWith('8')) {
@@ -499,16 +511,20 @@
     <script>
         $(document).ready(function () {
             function updateTimeLogic() {
+                var asfId = $('#ASFId').val();
                 var asfText = $('#ASFId option:selected').text().trim();
+                var classificationId = $('#ClassificationId').val();
                 var classificationText = $('#ClassificationId option:selected').text().trim();
                 var selectedProcess = $('#ProcessId option:selected').text();
 
                 // Get base minutes from data attribute
                 var baseMinutes = parseInt($('#ClassificationId option:selected').data('minutes')) || 0;
                 var finalMinutes = baseMinutes;
+                var isAsf8 = asfId === '1' || asfText.toLowerCase().includes('8 asf') || asfText.toLowerCase().startsWith('8');
+                var isType2Class1Clear = classificationId === '2' || classificationText === "Type II, Class 1 (CLEAR)";
 
                 // Apply specific logic: If ASF contains "8" and Classification is "Type II, Class 1 (CLEAR)"
-                if (asfText.includes("8") && classificationText === "Type II, Class 1 (CLEAR)") {
+                if (isAsf8 && isType2Class1Clear) {
                     finalMinutes = 27;
                 }
                 // Keep your existing override for Black Oxide
