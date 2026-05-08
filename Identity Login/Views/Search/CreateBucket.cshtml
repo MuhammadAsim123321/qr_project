@@ -51,7 +51,10 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Upload Image</label>
-                                <input type="file" name="ImageFiles" class="form-control" accept="image/*" multiple />
+                                <input type="file" name="ImageFiles" id="ImageFiles" class="form-control" accept="image/*" multiple />
+                                <input type="hidden" id="ExistingImages" name="ExistingImages" />
+                                <div id="customFilePreview" class="mt-2 d-flex flex-wrap"></div>
+                                <span id="placeholderText" class="text-muted">No files selected</span>
                             </div>
                         </div>
 
@@ -204,6 +207,92 @@
 
             $('#TotalIn2OfRunRight').on('input', function () { manualOverride = true; });
             $('#Quantity, #SurfaceArea').on('input', function () { manualOverride = false; updateTotalIn2OfRunRight(); });
+
+            // Image preview and removal script
+            let keptExisting = [];
+            let newFiles = [];
+
+            function updateHiddenExisting() {
+                $('#ExistingImages').val(keptExisting.join(','));
+            }
+
+            function renderThumb(src, id, isExisting, fileObj) {
+                const wrapper = $('<div>', { class: 'position-relative me-2 mb-2 d-inline-block' });
+                const img = $('<img>', {
+                    src: src,
+                    class: 'img-thumbnail',
+                    css: { height: '80px', width: 'auto' }
+                });
+                const btn = $('<button>', {
+                    type: 'button',
+                    text: '×',
+                    class: 'btn btn-danger position-absolute top-0 end-0',
+                    css: {
+                        height: '20px',
+                        width: '20px',
+                        padding: '0',
+                        fontSize: '14px',
+                        lineHeight: '20px',
+                        textAlign: 'center'
+                    }
+                });
+
+                btn.on('click', function () {
+                    wrapper.remove();
+                    if (isExisting) {
+                        keptExisting = keptExisting.filter(x => x !== id);
+                    } else {
+                        newFiles = newFiles.filter(f => f !== fileObj);
+                    }
+                    updateHiddenExisting();
+                    if ($('#customFilePreview').children().length === 0) {
+                        $('#placeholderText').show();
+                    }
+                });
+
+                return wrapper.append(img).append(btn);
+            }
+
+            function loadImages(jobId) {
+                const $preview = $('#customFilePreview');
+                $preview.empty();
+                $.getJSON('@Url.Action("GetImages", "RouterJobs")', { jobId: jobId }, function (data) {
+                    if (!data || data.length === 0) {
+                        $('#placeholderText').show();
+                        return;
+                    }
+                    $('#placeholderText').hide();
+                    keptExisting = data.map(x => x.uploadImageId);
+                    updateHiddenExisting();
+                    data.forEach(item => {
+                        $preview.append(renderThumb(item.imagePath, item.uploadImageId, true, null));
+                    });
+                });
+            }
+
+            $('#ImageFiles').on('change', function (e) {
+                const selected = Array.from(e.target.files);
+                if (selected.length === 0) return;
+                $('#placeholderText').hide();
+                selected.forEach(file => {
+                    newFiles.push(file);
+                    const url = URL.createObjectURL(file);
+                    $('#customFilePreview').append(renderThumb(url, null, false, file));
+                });
+                this.value = '';
+            });
+
+            $('form').on('submit', function () {
+                updateHiddenExisting();
+                const dt = new DataTransfer();
+                newFiles.forEach(f => dt.items.add(f));
+                document.getElementById('ImageFiles').files = dt.files;
+            });
+
+            const sourceJobId = '@Model.JobId';
+            if (sourceJobId) {
+                loadImages(sourceJobId);
+            }
         });
     </script>
 }

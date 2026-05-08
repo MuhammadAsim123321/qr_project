@@ -792,7 +792,7 @@ namespace Identity_Login.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateBucket([Bind("CustomerName,JobDetails,PartName,DrawingNo,SurfaceArea,Date,VerbalNo,Quantity,Materail,RCVDBy,ShippedBy,ClassificationId,RunTypeId,ASFId,MaterailId,ProcessId,TotalIn2OfRunRight,DisappearAfterShipped")] RouterJob routerJob, List<IFormFile>? ImageFiles, int? sourceJobId)
+        public async Task<IActionResult> CreateBucket([Bind("CustomerName,JobDetails,PartName,DrawingNo,SurfaceArea,Date,VerbalNo,Quantity,Materail,RCVDBy,ShippedBy,ClassificationId,RunTypeId,ASFId,MaterailId,ProcessId,TotalIn2OfRunRight,DisappearAfterShipped")] RouterJob routerJob, List<IFormFile>? ImageFiles, int? sourceJobId, string? existingImages)
         {
             ModelState.Remove(nameof(routerJob.JobNumber));
             ModelState.Remove(nameof(routerJob.Status));
@@ -812,15 +812,16 @@ namespace Identity_Login.Controllers
                     _context.Add(routerJob);
                     await _context.SaveChangesAsync();
 
-                    if (ImageFiles != null && ImageFiles.Count > 0)
+                    var keptExistingIds = (existingImages ?? string.Empty)
+                        .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(id => int.TryParse(id, out var parsed) ? parsed : 0)
+                        .Where(id => id > 0)
+                        .ToList();
+
+                    if (sourceJobId.HasValue && keptExistingIds.Any())
                     {
-                        await SaveJobImagesAsync(routerJob, ImageFiles);
-                    }
-                    else if (sourceJobId.HasValue)
-                    {
-                        // Copy images from source job
                         var oldImages = await _context.Set<UploadImage>()
-                            .Where(u => u.RouterJobId == sourceJobId.Value)
+                            .Where(u => u.RouterJobId == sourceJobId.Value && keptExistingIds.Contains(u.UploadImageId))
                             .ToListAsync();
 
                         foreach (var img in oldImages)
@@ -833,6 +834,15 @@ namespace Identity_Login.Controllers
                             _context.Add(newImage);
                         }
                         await _context.SaveChangesAsync();
+                    }
+
+                    if (ImageFiles != null && ImageFiles.Count > 0)
+                    {
+                        await SaveJobImagesAsync(routerJob, ImageFiles);
+                    }
+                    else if (sourceJobId.HasValue && !keptExistingIds.Any())
+                    {
+                        // No kept existing images, so don't copy any old images.
                     }
 
                     await CompleteFirstProcessStepAsync(routerJob);
