@@ -104,7 +104,11 @@
                                 <div class="d-flex flex-row flex-wrap justify-content-center" style="gap: 8px;">
                                     @foreach (var img in Model.UploadImages)
                                     {
-                                        <img src="@img.ImagePath" class="img-thumbnail" style="max-width:80px;max-height:80px;" />
+                                        <img src="@Url.Action("GetBlobImage", "RouterJobs", new { blobUrl = img.ImagePath })"
+                                             class="img-thumbnail"
+                                             style="max-width:80px;max-height:80px;"
+                                             alt="Job Image"
+                                             onerror="this.style.display='none'" />
                                     }
                                 </div>
                             }

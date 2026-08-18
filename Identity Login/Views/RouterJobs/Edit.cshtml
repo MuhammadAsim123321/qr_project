@@ -194,8 +194,8 @@
             $classification.empty();
             $classification.append($('<option>', { value: '', text: '-- Select Classification --' }));
 
-            $.getJSON('@Url.Action("GetClassifications", "RouterJobs")', { asfId: asfId, processId: processId }, function (data) {
-                $.each(data, function (i, item) {
+            $.getJSON('@Url.Action("GetClassifications", "RouterJobs")', { asfId: asfId, processId: processId }, function(data) {
+                $.each(data, function(i, item) {
                     $classification.append($('<option>', {
                         value: item.classificationId,
                         text: item.name,
@@ -218,18 +218,18 @@
             });
         }
 
-        $(document).ready(function () {
+        $(document).ready(function() {
             // On page load, set selected value from model
             updateClassificationDropdown(true);
 
             // On ASF/Process change, reset to placeholder
-            $('#ASFId').change(function () { updateClassificationDropdown(false); });
-            $('#ProcessId').change(function () { updateClassificationDropdown(false); });
+            $('#ASFId').change(function() { updateClassificationDropdown(false); });
+            $('#ProcessId').change(function() { updateClassificationDropdown(false); });
         });
     </script>
 
     <script>
-        $(document).ready(function () {
+        $(document).ready(function() {
             let manualOverride = false;
 
             function updateTotalIn2OfRunRight() {
@@ -237,16 +237,16 @@
                 var qty = parseFloat($('#Quantity').val()) || 0;
                 var area = parseFloat($('#SurfaceArea').val()) || 0;
 
-                if(qty && area) {
+                if (qty && area) {
                     $('#TotalIn2OfRunRight').val((qty * area).toFixed(2));
                 }
             }
 
-            $('#TotalIn2OfRunRight').on('input', function () {
+            $('#TotalIn2OfRunRight').on('input', function() {
                 manualOverride = true;
             });
 
-            $('#Quantity, #SurfaceArea').on('input', function () {
+            $('#Quantity, #SurfaceArea').on('input', function() {
                 manualOverride = false;
                 updateTotalIn2OfRunRight();
             });
@@ -279,7 +279,7 @@
                 $('#AMPS').val((totalIn2 / 18.0).toFixed(2));
                 $('#AMPSPerParts').val((area / 18.0).toFixed(2));
             } else {
-                var asfConstant = asfText.includes('16') ? (1.0/9.0) : (1.0/12.0);
+                var asfConstant = asfText.includes('16') ? (1.0 / 9.0) : (1.0 / 12.0);
                 $('#AMPS').val((totalIn2 * asfConstant).toFixed(2));
                 $('#AMPSPerParts').val((area * asfConstant).toFixed(2));
             }
@@ -288,13 +288,13 @@
             $('#TimeSeconds').val(minutes * 60);
         }
 
-        $(document).ready(function () {
+        $(document).ready(function() {
             $('#Quantity, #SurfaceArea, #ASFId, #ClassificationId, #TotalIn2OfRunRight').on('input change', updateCalculatedFields);
         });
     </script>
     @* This script is handling the Material 2024 to show only for Chemical Conversion and Anodizing Process *@
     <script>
-                $(document).on('change', '#ProcessId', function () {
+        $(document).on('change', '#ProcessId', function() {
             let proc = $(this).find('option:selected').text();
             let isSpec = proc.includes("Anodizing") || proc.includes("Chemical Conversion");
             $("#MaterailId option[value='7']").toggle(isSpec);
@@ -303,7 +303,7 @@
     </script>
 
     <script>
-        $(function () {
+        $(function() {
 
             let keptExisting = [];      // IDs of images you keep
             let newFiles = [];          // new selected files
@@ -321,16 +321,16 @@
                 const btn = $('<button>', {
                     type: 'button',
                     text: '×',
-                          class: 'btn btn-danger position-absolute top-0 end-0',
-        css: {
-            height: '20px',
-            width: '20px',
-            padding: '0',
-            fontSize: '14px',
-            lineHeight: '20px',
-            textAlign: 'center'
-        },
-                    click: function () {
+                    class: 'btn btn-danger position-absolute top-0 end-0',
+                    css: {
+                        height: '20px',
+                        width: '20px',
+                        padding: '0',
+                        fontSize: '14px',
+                        lineHeight: '20px',
+                        textAlign: 'center'
+                    },
+                    click: function() {
 
                         wrapper.remove();
 
@@ -361,7 +361,7 @@
                 const $preview = $("#customFilePreview");
                 $preview.empty();
 
-                $.getJSON('@Url.Action("GetImages", "RouterJobs")', { jobId }, function (data) {
+                $.getJSON('@Url.Action("GetImages", "RouterJobs")', { jobId }, function(data) {
 
                     if (!data || data.length === 0) {
                         $("#placeholderText").show();
@@ -374,7 +374,9 @@
                     updateHidden();
 
                     data.forEach(item => {
-                        $preview.append(renderThumb(item.imagePath, item.uploadImageId, true, null));
+                        const proxyUrl = `@Url.Action("GetBlobImage", "RouterJobs")?blobUrl=${encodeURIComponent(item.imagePath)}`;
+                        $preview.append(renderThumb(proxyUrl, item.uploadImageId, true, null));
+                        // $preview.append(renderThumb(item.imagePath, item.uploadImageId, true, null));
                     });
                 });
             }
@@ -384,7 +386,7 @@
             if (jobId) loadImages(jobId);
 
             // Handle selecting new images
-            $("#ImageFiles").on("change", function (e) {
+            $("#ImageFiles").on("change", function(e) {
                 const selected = Array.from(e.target.files);
                 if (selected.length === 0) return;
 
@@ -401,7 +403,7 @@
             });
 
             // FINAL FIX — rebuild actual file input before form submit
-            $("form").on("submit", function () {
+            $("form").on("submit", function() {
 
                 updateHidden();
 
@@ -445,7 +447,7 @@
     </script>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener("DOMContentLoaded", function() {
             const processSelect = document.getElementById("ProcessId");
 
             function toggleFields() {
@@ -472,10 +474,10 @@
 
     @* This functipon is calling the suggestion Name list for customer  *@
     <script>
-        $(document).ready(function () {
+        $(document).ready(function() {
             let timeout = null;
 
-            $('#customerInput').on('input', function () {
+            $('#customerInput').on('input', function() {
                 clearTimeout(timeout);
                 let term = $(this).val();
 
@@ -486,20 +488,20 @@
                 }
 
                 // Debounce: Wait 300ms after the user stops typing to call the server
-                timeout = setTimeout(function () {
+                timeout = setTimeout(function() {
                     $.ajax({
                         url: '@Url.Action("GetCustomerSuggestions", "RouterJobs")',
                         type: 'GET',
                         data: { term: term },
-                        success: function (data) {
+                        success: function(data) {
                             let $datalist = $('#customerList');
                             $datalist.empty(); // Clear old suggestions
 
-                            $.each(data, function (i, name) {
+                            $.each(data, function(i, name) {
                                 $datalist.append($('<option>').val(name));
                             });
                         },
-                        error: function (err) {
+                        error: function(err) {
                             console.error("Error fetching suggestions:", err);
                         }
                     });
@@ -508,43 +510,43 @@
         });</script>
 
 
-    <script>
-        $(document).ready(function () {
-            function updateTimeLogic() {
-                var asfId = $('#ASFId').val();
-                var asfText = $('#ASFId option:selected').text().trim();
-                var classificationId = $('#ClassificationId').val();
-                var classificationText = $('#ClassificationId option:selected').text().trim();
-                var selectedProcess = $('#ProcessId option:selected').text();
+        <script>
+            $(document).ready(function() {
+                function updateTimeLogic() {
+                    var asfId = $('#ASFId').val();
+                    var asfText = $('#ASFId option:selected').text().trim();
+                    var classificationId = $('#ClassificationId').val();
+                    var classificationText = $('#ClassificationId option:selected').text().trim();
+                    var selectedProcess = $('#ProcessId option:selected').text();
 
-                // Get base minutes from data attribute
-                var baseMinutes = parseInt($('#ClassificationId option:selected').data('minutes')) || 0;
-                var finalMinutes = baseMinutes;
-                var isAsf8 = asfId === '1' || asfText.toLowerCase().includes('8 asf') || asfText.toLowerCase().startsWith('8');
-                var isType2Class1Clear = classificationId === '2' || classificationText === "Type II, Class 1 (CLEAR)";
+                    // Get base minutes from data attribute
+                    var baseMinutes = parseInt($('#ClassificationId option:selected').data('minutes')) || 0;
+                    var finalMinutes = baseMinutes;
+                    var isAsf8 = asfId === '1' || asfText.toLowerCase().includes('8 asf') || asfText.toLowerCase().startsWith('8');
+                    var isType2Class1Clear = classificationId === '2' || classificationText === "Type II, Class 1 (CLEAR)";
 
-                // Apply specific logic: If ASF contains "8" and Classification is "Type II, Class 1 (CLEAR)"
-                if (isAsf8 && isType2Class1Clear) {
-                    finalMinutes = 27;
+                    // Apply specific logic: If ASF contains "8" and Classification is "Type II, Class 1 (CLEAR)"
+                    if (isAsf8 && isType2Class1Clear) {
+                        finalMinutes = 27;
+                    }
+                    // Keep your existing override for Black Oxide
+                    else if (selectedProcess.includes("Black Oxide Process")) {
+                        finalMinutes = 15;
+                    }
+
+                    $('#TimeMinutes').val(finalMinutes);
+                    $('#TimeSeconds').val(finalMinutes * 60);
                 }
-                // Keep your existing override for Black Oxide
-                else if (selectedProcess.includes("Black Oxide Process")) {
-                    finalMinutes = 15;
-                }
 
-                $('#TimeMinutes').val(finalMinutes);
-                $('#TimeSeconds').val(finalMinutes * 60);
-            }
+                // Bind to the dropdowns that trigger the logic
+                $('#ASFId, #ClassificationId, #ProcessId').on('change', updateTimeLogic);
 
-            // Bind to the dropdowns that trigger the logic
-            $('#ASFId, #ClassificationId, #ProcessId').on('change', updateTimeLogic);
-
-            // Run on load
-            updateTimeLogic();
-        });
-    </script>
+                // Run on load
+                updateTimeLogic();
+            });
+        </script>
 
 
 
 
-}
+    }

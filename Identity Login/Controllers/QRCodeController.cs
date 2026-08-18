@@ -1,5 +1,6 @@
 ﻿using Identity_Login.Data;
 using Identity_Login.Models.ViewModels;
+using Identity_Login.Services;
 //using MessagingToolkit.QRCode.Codec;
 //using MessagingToolkit.QRCode.Codec.Data;
 using Microsoft.AspNetCore.Mvc;
@@ -17,11 +18,11 @@ namespace Identity_Login.Controllers
 {
     public class QRCodeController : Controller
     {
-        private readonly IWebHostEnvironment _environment;
+        private readonly BlobStorageService _blobStorageService;
 
-        public QRCodeController(IWebHostEnvironment environment)
+        public QRCodeController(BlobStorageService blobStorageService)
         {
-            _environment = environment;
+            _blobStorageService = blobStorageService;
         }
 
         [HttpPost]
@@ -39,7 +40,7 @@ namespace Identity_Login.Controllers
                 var qrCode = new BitmapByteQRCode(qrCodeData);
                 byte[] qrCodeImage = qrCode.GetGraphic(20);
 
-                // Save QR code file on server
+                // Upload QR code to Azure Blob Storage instead of saving to wwwroot
                 string? savedPath = await SaveQrFileAsync(qrCodeImage, jobDetails.JobNumber);
 
                 // Update job details
@@ -58,19 +59,9 @@ namespace Identity_Login.Controllers
         {
             try
             {
-                string directoryPath = Path.Combine(_environment.WebRootPath, "qrs");
-
-                if (!Directory.Exists(directoryPath))
-                {
-                    Directory.CreateDirectory(directoryPath);
-                }
-
                 string uniqueFileName = $"{jobNumber}_{Guid.NewGuid()}.png";
-                string filePath = Path.Combine(directoryPath, uniqueFileName);
-
-                await System.IO.File.WriteAllBytesAsync(filePath, qrCodeImage);
-
-                return filePath;
+                string blobUrl = await _blobStorageService.UploadImageBytesAsync(qrCodeImage, uniqueFileName, "image/png");
+                return blobUrl; // full https URL, e.g. https://quickanodizingstorage.blob.core.windows.net/images/xxxx.png
             }
             catch
             {
@@ -138,6 +129,6 @@ namespace Identity_Login.Controllers
         //        return null;
         //    }
         //}
-    
+
     }
 }

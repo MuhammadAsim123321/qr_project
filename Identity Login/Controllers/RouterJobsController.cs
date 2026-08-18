@@ -28,17 +28,33 @@ namespace Identity_Login.Controllers
         private readonly ApplicationDbContext _context;
         private readonly PdfService _pdfService;
         private readonly RazorViewToStringRenderer _renderer;
+        private readonly BlobStorageService _blobStorageService;
 
-        //private readonly QrCodeService _qrCodeService;
-
-        public RouterJobsController(ApplicationDbContext context, PdfService pdfService, RazorViewToStringRenderer renderer)
+        public RouterJobsController(ApplicationDbContext context, PdfService pdfService, RazorViewToStringRenderer renderer, BlobStorageService blobStorageService)
         {
             _context = context;
             _pdfService = pdfService;
             _renderer = renderer;
-            //_qrCodeService = qrCodeService;
+            _blobStorageService = blobStorageService;
+            // ✅ REMOVED: No SSL bypass needed here
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetBlobImage(string blobUrl)
+        {
+            try
+            {
+                var imageBytes = await _blobStorageService.DownloadImageBytesAsync(blobUrl);
+                if (imageBytes == null)
+                    return NotFound();
+
+                return File(imageBytes, "image/png");
+            }
+            catch
+            {
+                return StatusCode(500, "Failed to load image");
+            }
+        }
 
         [HttpGet]
         public IActionResult GetClassifications(int asfId, int? processId)
@@ -47,14 +63,14 @@ namespace Identity_Login.Controllers
             if (processId == 2)
             {
                 var result = _context.classifications
-                    .Select(c => new { c.ClassificationId, c.Name, c.Minutes }) 
+                    .Select(c => new { c.ClassificationId, c.Name, c.Minutes })
                     .ToList();
                 return Json(result);
             }
             else if (processId == 3)
             {
                 var result = _context.classifications
-                    .Select(c => new { c.ClassificationId, c.Name, c.Minutes }) 
+                    .Select(c => new { c.ClassificationId, c.Name, c.Minutes })
                     .ToList();
                 return Json(result);
             }
@@ -62,7 +78,7 @@ namespace Identity_Login.Controllers
             {
                 var result = _context.classifications
                     .Where(c => c.ClassificationId >= 28 && c.ClassificationId <= 31)
-                    .Select(c => new { c.ClassificationId, c.Name, c.Minutes }) 
+                    .Select(c => new { c.ClassificationId, c.Name, c.Minutes })
                     .ToList();
                 return Json(result);
             }
@@ -73,27 +89,27 @@ namespace Identity_Login.Controllers
 
             var asf12Classifications = new List<string>
             {
-            "Type I, Class 1 (CLEAR)",
-            "Type II, Class 1 (CLEAR)",
-            "Type II, Class 2 (BLACK)",
-            "Type II, Class 2 (BLUE-A)",
-            "Type II, Class 2 (BORDEAUX RED)",
-            "Type II, Class 2 (CAMO BROWN)",
-            "Type II, Class 2 (DARK BLUE)",
-            "Type II, Class 2 (GOLD S)",
-            "Type II, Class 2 (GREEN AEN)",
-            "Type II, Class 2 (GREY)",
-            "Type II, Class 2 (LANTZ MEDICAL BLUE)",
-            "Type II, Class 2 (NEON PINK)",
-            "Type II, Class 2 (OLIVE DRAB)",
-            "Type II, Class 2 (ORANGE 2B)",
-            "Type II, Class 2 (TEAL)",
-            "Type II, Class 2 (VIOLET 3D)",
-            "Type II, Class 2 (YELLOW 4A)",
-            "Type III, Class 1 (CLEAR)",
-            "Type III, Class 1 (CLEAR) W/ PTFE TEFLON",
-            "Type III, Class 2 (BLACK)"
-           };
+                "Type I, Class 1 (CLEAR)",
+                "Type II, Class 1 (CLEAR)",
+                "Type II, Class 2 (BLACK)",
+                "Type II, Class 2 (BLUE-A)",
+                "Type II, Class 2 (BORDEAUX RED)",
+                "Type II, Class 2 (CAMO BROWN)",
+                "Type II, Class 2 (DARK BLUE)",
+                "Type II, Class 2 (GOLD S)",
+                "Type II, Class 2 (GREEN AEN)",
+                "Type II, Class 2 (GREY)",
+                "Type II, Class 2 (LANTZ MEDICAL BLUE)",
+                "Type II, Class 2 (NEON PINK)",
+                "Type II, Class 2 (OLIVE DRAB)",
+                "Type II, Class 2 (ORANGE 2B)",
+                "Type II, Class 2 (TEAL)",
+                "Type II, Class 2 (VIOLET 3D)",
+                "Type II, Class 2 (YELLOW 4A)",
+                "Type III, Class 1 (CLEAR)",
+                "Type III, Class 1 (CLEAR) W/ PTFE TEFLON",
+                "Type III, Class 2 (BLACK)"
+            };
 
             var asf16Classifications = new List<string>
             {
@@ -106,7 +122,6 @@ namespace Identity_Login.Controllers
             if (asf12 != null && asfId == asf12.ASFId)
             {
                 filtered = _context.classifications.Where(c => asf12Classifications.Contains(c.Name)).ToList();
-               
             }
             else if (asf16 != null && asfId == asf16.ASFId)
             {
@@ -119,10 +134,9 @@ namespace Identity_Login.Controllers
                     .ToList();
             }
 
-            // ✅ Include Minutes in response
             return Json(filtered.Select(c => new { c.ClassificationId, c.Name, c.Minutes }));
         }
-    
+
         public async Task<IActionResult> PreviewRouterJob(int id)
         {
             var job = await _context.RouterJobs
@@ -135,28 +149,20 @@ namespace Identity_Login.Controllers
             if (job == null) return NotFound();
 
             string qrBase64 = null;
-            if (!string.IsNullOrEmpty(job.PdfFilePath) && System.IO.File.Exists(job.PdfFilePath))
-            {
-                var bytes = await System.IO.File.ReadAllBytesAsync(job.PdfFilePath);
-                qrBase64 = "data:image/png;base64," + Convert.ToBase64String(bytes);
-            }
+            var qrBytesForPreview = await GetImageBytesAsync(job.PdfFilePath);
+            if (qrBytesForPreview != null)
+                qrBase64 = "data:image/png;base64," + Convert.ToBase64String(qrBytesForPreview);
 
             string imageBase64 = null;
-            if (!string.IsNullOrEmpty(job.ImagePath))
-            {
-                var physicalPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", job.ImagePath.TrimStart('/').Replace("/", Path.DirectorySeparatorChar.ToString()));
-                if (System.IO.File.Exists(physicalPath))
-                {
-                    var bytes = await System.IO.File.ReadAllBytesAsync(physicalPath);
-                    imageBase64 = "data:image/png;base64," + Convert.ToBase64String(bytes);
-                }
-            }
+            var imageBytesForPreview = await GetImageBytesAsync(job.ImagePath);
+            if (imageBytesForPreview != null)
+                imageBase64 = "data:image/png;base64," + Convert.ToBase64String(imageBytesForPreview);
 
             var totalIn2OfRun = (double)(job.Quantity * (job.SurfaceArea ?? 0));
             double asfBasedConstant = job.ASF != null && job.ASF.Name.Contains("16") ? 1.0 / 9.0 : 1.0 / 12.0;
-            
+
             // For 8 ASF, use division by 18; for other ASF, use multiplication
-            var amps = job.ASF != null && job.ASF.Name.Contains("8") 
+            var amps = job.ASF != null && job.ASF.Name.Contains("8")
                 ? Math.Round(totalIn2OfRun / 18.0, 3)
                 : Math.Round(totalIn2OfRun * asfBasedConstant, 3);
             var ampsPerParts = job.ASF != null && job.ASF.Name.Contains("8")
@@ -392,11 +398,9 @@ namespace Identity_Login.Controllers
                 return NotFound();
 
             string qrBase64 = null;
-            if (!string.IsNullOrEmpty(job.PdfFilePath) && System.IO.File.Exists(job.PdfFilePath))
-            {
-                var bytes = await System.IO.File.ReadAllBytesAsync(job.PdfFilePath);
-                qrBase64 = "data:image/png;base64," + Convert.ToBase64String(bytes);
-            }
+            var qrBytesForDetails = await GetImageBytesAsync(job.PdfFilePath);
+            if (qrBytesForDetails != null)
+                qrBase64 = "data:image/png;base64," + Convert.ToBase64String(qrBytesForDetails);
             var model = new RouterjobPdfVM
             {
                 JobId = job.JobId,
@@ -542,7 +546,7 @@ namespace Identity_Login.Controllers
                 TimeMinutes = job.Classification?.Minutes,
                 TimeSeconds = (job.Classification?.Minutes ?? 0) * 60,
                 // For 8 ASF, use division by 18; for other ASF, use multiplication
-                AMPS = (job.ASF != null && job.ASF.Name.Contains("8")) 
+                AMPS = (job.ASF != null && job.ASF.Name.Contains("8"))
                     ? ((job.TotalIn2OfRunRight ?? 0) / 18.0)
                     : ((job.TotalIn2OfRunRight ?? 0) * (job.ASF != null && job.ASF.Name.Contains("16") ? (1.0 / 9.0) : (1.0 / 12.0))),
                 AMPSPerParts = (job.ASF != null && job.ASF.Name.Contains("8"))
@@ -569,7 +573,7 @@ namespace Identity_Login.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, RouterJobEditVm vm , List<IFormFile>? ImageFiles)
+        public async Task<IActionResult> Edit(int id, RouterJobEditVm vm, List<IFormFile>? ImageFiles)
         {
             if (id != vm.JobId)
                 return NotFound();
@@ -626,12 +630,7 @@ namespace Identity_Login.Controllers
 
                     foreach (var img in toDelete)
                     {
-                        var physicalPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot",
-                            img.ImagePath.TrimStart('/').Replace("/", Path.DirectorySeparatorChar.ToString()));
-
-                        if (System.IO.File.Exists(physicalPath))
-                            System.IO.File.Delete(physicalPath);
-
+                        await _blobStorageService.DeleteImageAsync(img.ImagePath);
                         _context.Remove(img);
                     }
                     await _context.SaveChangesAsync();
@@ -639,26 +638,16 @@ namespace Identity_Login.Controllers
                     // 4️⃣ Save NEW images
                     if (ImageFiles != null && ImageFiles.Count > 0)
                     {
-                        var uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "jobimages");
-                        if (!Directory.Exists(uploadFolder))
-                            Directory.CreateDirectory(uploadFolder);
-
                         foreach (var file in ImageFiles)
                         {
                             if (file.Length > 0)
                             {
-                                var uniqueFileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
-                                var filePath = Path.Combine(uploadFolder, uniqueFileName);
-
-                                using (var stream = new FileStream(filePath, FileMode.Create))
-                                {
-                                    await file.CopyToAsync(stream);
-                                }
+                                var blobUrl = await _blobStorageService.UploadImageAsync(file);
 
                                 _context.Add(new UploadImage
                                 {
                                     RouterJobId = job.JobId,
-                                    ImagePath = "/jobimages/" + uniqueFileName
+                                    ImagePath = blobUrl
                                 });
                             }
                         }
@@ -759,15 +748,12 @@ namespace Identity_Login.Controllers
 
                 if (routerJob != null)
                 {
-                    // Delete images from disk and DB
+                    // Delete images from Azure Blob Storage and DB
                     if (routerJob.UploadImages != null)
                     {
                         foreach (var img in routerJob.UploadImages)
                         {
-                            var physicalPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", img.ImagePath.TrimStart('/').Replace("/", Path.DirectorySeparatorChar.ToString()));
-                            if (System.IO.File.Exists(physicalPath))
-                                System.IO.File.Delete(physicalPath);
-
+                            await _blobStorageService.DeleteImageAsync(img.ImagePath);
                             _context.Remove(img);
                         }
                     }
@@ -808,7 +794,7 @@ namespace Identity_Login.Controllers
                 .ToListAsync();
 
             ViewBag.ProcessSteps = new SelectList(steps, "ProcessStepId", "StepName");
-                //ViewBag.CustomerName = job.CustomerName;
+            //ViewBag.CustomerName = job.CustomerName;
 
 
             // Find current stage (if any)
@@ -822,7 +808,7 @@ namespace Identity_Login.Controllers
             {
                 JobId = id,
                 CurrentProcessStepId = currentStage,
-                CustomerName = job.CustomerName 
+                CustomerName = job.CustomerName
 
             });
         }
@@ -931,23 +917,15 @@ namespace Identity_Login.Controllers
         {
             if (imageFiles != null && imageFiles.Count > 0)
             {
-                var uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "jobimages");
-                if (!Directory.Exists(uploadFolder))
-                    Directory.CreateDirectory(uploadFolder);
-
                 foreach (var file in imageFiles)
                 {
                     if (file.Length > 0)
                     {
-                        var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-                        var filePath = Path.Combine(uploadFolder, uniqueFileName);
-                        using (var stream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await file.CopyToAsync(stream);
-                        }
+                        var blobUrl = await _blobStorageService.UploadImageAsync(file);
+
                         var uploadImage = new UploadImage
                         {
-                            ImagePath = "/jobimages/" + uniqueFileName,
+                            ImagePath = blobUrl,
                             RouterJobId = job.JobId
                         };
                         _context.Add(uploadImage);
@@ -968,23 +946,63 @@ namespace Identity_Login.Controllers
                 PdfFilePath = ""
             };
 
-            using (var httpClient = new HttpClient())
+            // ✅ FIXED - Disable SSL certificate validation in DEBUG mode
+            using (var handler = new HttpClientHandler())
             {
-                var baseUrl = $"{Request.Scheme}://{Request.Host}";
-                var response = await httpClient.PostAsJsonAsync($"{baseUrl}/QRCode/Generate", jobVm);
-
-                if (response.IsSuccessStatusCode)
+#if DEBUG
+                handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) =>
                 {
-                    var qrResult = await response.Content.ReadFromJsonAsync<QrCodeResult>();
-                    if (qrResult != null && !string.IsNullOrEmpty(qrResult.SavedPath))
+                    return true; // Accept all certificates (UNSAFE - DEV ONLY)
+                };
+#endif
+
+                using (var httpClient = new HttpClient(handler))
+                {
+                    var baseUrl = $"{Request.Scheme}://{Request.Host}";
+                    var response = await httpClient.PostAsJsonAsync($"{baseUrl}/QRCode/Generate", jobVm);
+
+                    if (response.IsSuccessStatusCode)
                     {
-                        job.PdfFilePath = qrResult.SavedPath;
-                        _context.Update(job);
-                        await _context.SaveChangesAsync();
+                        var qrResult = await response.Content.ReadFromJsonAsync<QrCodeResult>();
+                        if (qrResult != null && !string.IsNullOrEmpty(qrResult.SavedPath))
+                        {
+                            job.PdfFilePath = qrResult.SavedPath;
+                            _context.Update(job);
+                            await _context.SaveChangesAsync();
+                        }
                     }
                 }
             }
         }
+
+        //private async Task GenerateAndSaveQrCodeAsync(RouterJob job)
+        //{
+        //    var jobVm = new RouterJobVm
+        //    {
+        //        JobId = job.JobId,
+        //        JobNumber = job.JobNumber,
+        //        CustomerName = job.CustomerName,
+        //        JobDetails = job.JobDetails,
+        //        PdfFilePath = ""
+        //    };
+
+        //    using (var httpClient = new HttpClient())
+        //    {
+        //        var baseUrl = $"{Request.Scheme}://{Request.Host}";
+        //        var response = await httpClient.PostAsJsonAsync($"{baseUrl}/QRCode/Generate", jobVm);
+
+        //        if (response.IsSuccessStatusCode)
+        //        {
+        //            var qrResult = await response.Content.ReadFromJsonAsync<QrCodeResult>();
+        //            if (qrResult != null && !string.IsNullOrEmpty(qrResult.SavedPath))
+        //            {
+        //                job.PdfFilePath = qrResult.SavedPath;
+        //                _context.Update(job);
+        //                await _context.SaveChangesAsync();
+        //            }
+        //        }
+        //    }
+        //}
 
         //Functions For Download_GeneratePdf
         private async Task<RouterJob?> GetJobWithDetailsAsync(int id)
@@ -1038,10 +1056,9 @@ namespace Identity_Login.Controllers
             {
                 foreach (var img in job.UploadImages)
                 {
-                    var physicalPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", img.ImagePath.TrimStart('/').Replace("/", Path.DirectorySeparatorChar.ToString()));
-                    if (System.IO.File.Exists(physicalPath))
+                    var bytes = await GetImageBytesAsync(img.ImagePath);
+                    if (bytes != null)
                     {
-                        var bytes = await System.IO.File.ReadAllBytesAsync(physicalPath);
                         var base64 = "data:image/png;base64," + Convert.ToBase64String(bytes);
                         imageBase64List.Add(base64);
                     }
@@ -1052,12 +1069,27 @@ namespace Identity_Login.Controllers
 
         private async Task<string?> GetQrCodeBase64Async(RouterJob job)
         {
-            if (!string.IsNullOrEmpty(job.PdfFilePath) && System.IO.File.Exists(job.PdfFilePath))
+            var bytes = await GetImageBytesAsync(job.PdfFilePath);
+            return bytes != null ? "data:image/png;base64," + Convert.ToBase64String(bytes) : null;
+        }
+
+        // Reads image bytes whether the stored path is a new Azure Blob Storage URL
+        // or an old local wwwroot path saved before this migration.
+        private async Task<byte[]?> GetImageBytesAsync(string? pathOrUrl)
+        {
+            if (string.IsNullOrEmpty(pathOrUrl))
+                return null;
+
+            if (pathOrUrl.StartsWith("http://") || pathOrUrl.StartsWith("https://"))
             {
-                var bytes = await System.IO.File.ReadAllBytesAsync(job.PdfFilePath);
-                return "data:image/png;base64," + Convert.ToBase64String(bytes);
+                return await _blobStorageService.DownloadImageBytesAsync(pathOrUrl);
             }
-            return null;
+
+            // Legacy local wwwroot path (jobs created before the blob storage migration)
+            var physicalPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot",
+                pathOrUrl.TrimStart('/').Replace("/", Path.DirectorySeparatorChar.ToString()));
+
+            return System.IO.File.Exists(physicalPath) ? await System.IO.File.ReadAllBytesAsync(physicalPath) : null;
         }
 
         //NameSuggestionFunction 

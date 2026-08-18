@@ -6,11 +6,11 @@ namespace Identity_Login.Services
 
     public class QrCodeService
     {
-        private readonly IWebHostEnvironment _environment;
+        private readonly BlobStorageService _blobStorageService;
 
-        public QrCodeService(IWebHostEnvironment environment)
+        public QrCodeService(BlobStorageService blobStorageService)
         {
-            _environment = environment;
+            _blobStorageService = blobStorageService;
         }
 
         public async Task<string?> GenerateAndSaveQrAsync(RouterJobVm jobVm)
@@ -23,17 +23,12 @@ namespace Identity_Login.Services
             var qrCode = new BitmapByteQRCode(qrCodeData);
             byte[] qrCodeImage = qrCode.GetGraphic(20);
 
-            // Save QR code file on server
-            string directoryPath = Path.Combine(_environment.WebRootPath, "qrs");
-            if (!Directory.Exists(directoryPath))
-                Directory.CreateDirectory(directoryPath);
-
             string uniqueFileName = $"{jobVm.JobNumber}_{Guid.NewGuid()}.png";
-            string filePath = Path.Combine(directoryPath, uniqueFileName);
 
-            await System.IO.File.WriteAllBytesAsync(filePath, qrCodeImage);
+            // Upload to Azure Blob Storage instead of saving to wwwroot
+            var blobUrl = await _blobStorageService.UploadImageBytesAsync(qrCodeImage, uniqueFileName, "image/png");
 
-            return filePath;
+            return blobUrl; // full https URL, e.g. https://quickanodizingstorage.blob.core.windows.net/images/xxxx.png
         }
     }
 }

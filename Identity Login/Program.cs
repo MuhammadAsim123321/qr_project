@@ -9,11 +9,29 @@ using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
 using DinkToPdf.Contracts;
 using DinkToPdf;
+using System.Net;
+using System.Net.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
 builder.Services.AddScoped<QrCodeService>();
+
+// ✅ OPTIMIZED: Use targeted SSL bypass only for HttpClient (not global)
+builder.Services.AddSingleton<BlobStorageService>(provider =>
+{
+    var config = provider.GetRequiredService<IConfiguration>();
+    var httpClientHandler = new HttpClientHandler();
+
+    // Only bypass SSL for development
+    if (!builder.Environment.IsProduction())
+    {
+        httpClientHandler.ServerCertificateCustomValidationCallback =
+            (message, cert, chain, errors) => true;
+    }
+
+    return new BlobStorageService(config, httpClientHandler);
+});
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
@@ -29,10 +47,9 @@ builder.Services.AddRazorPages();
 builder.Services.AddDbContext<ApplicationDbContext>(opt =>
         opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-QuestPDF.Settings.License = LicenseType.Community; // choose the right license type for your organization
+QuestPDF.Settings.License = LicenseType.Community;
 
-
-builder.Services.AddIdentity<IdentityUser,IdentityRole>(options => {
+builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => {
     options.Password.RequiredUniqueChars = 0;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireUppercase = false;
@@ -54,16 +71,14 @@ builder.Services.AddScoped<IEmailSender, EmailSender>();
 
 var app = builder.Build();
 
-
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
+    app.UseHttpsRedirection();
 }
 
-app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
@@ -74,7 +89,5 @@ app.MapRazorPages();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Customer}/{action=Search}/{id?}");
-//name: "default",
-//pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
