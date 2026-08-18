@@ -18,17 +18,15 @@
                         <dd class="col-sm-8">@Model.JobNumber</dd>
                         <dt class="col-sm-4">Customer Name</dt>
                         <dd class="col-sm-8">@Model.CustomerName</dd>
-                        @* <dt class="col-sm-4">QR Code Data</dt> *@
-                        @* <dd class="col-sm-8">@Model.QrCodeData</dd> *@
-                        @* <dt class="col-sm-4">Job Status</dt> *@
-                        @* <dd class="col-sm-8">@Model.Status</dd> *@
                         <dt class="col-sm-4">QR Image</dt>
-                        <dd class="col-sm-8">
+                        <dd class="col-sm-8 text-center">
                             @if (!string.IsNullOrEmpty(Model.PdfFilePath))
                             {
-                                var fileName = System.IO.Path.GetFileName(Model.PdfFilePath);
-                                var imageUrl = Url.Content($"~/qrs/{fileName}");
-                                <img src="@imageUrl" alt="QR" class="img-thumbnail" style="max-width: 120px; max-height: 120px;" />
+                                <img src="@Url.Action("GetBlobImage", "RouterJobs", new { blobUrl = Model.PdfFilePath })"
+                                     alt="QR"
+                                     class="img-thumbnail"
+                                     style="max-width: 120px; max-height: 120px;"
+                                     onerror="this.style.display='none'" />
                             }
                             else
                             {
