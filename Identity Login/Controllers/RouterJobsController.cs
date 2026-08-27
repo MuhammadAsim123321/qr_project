@@ -386,6 +386,7 @@ namespace Identity_Login.Controllers
                 return NotFound();
 
             var job = await _context.RouterJobs
+                .AsNoTracking() // ✅ Since this is read-only, add AsNoTracking
                 .Include(j => j.Classification)
                 .Include(j => j.RunType)
                 .Include(j => j.ASF)
@@ -397,10 +398,11 @@ namespace Identity_Login.Controllers
             if (job == null)
                 return NotFound();
 
-            string qrBase64 = null;
-            var qrBytesForDetails = await GetImageBytesAsync(job.PdfFilePath);
-            if (qrBytesForDetails != null)
-                qrBase64 = "data:image/png;base64," + Convert.ToBase64String(qrBytesForDetails);
+            // ✅ OPTIMIZATION: Don't convert to base64 in controller
+            // Instead, pass the blob URL directly to the view and let it use GetBlobImage
+            // This avoids downloading and converting on every page load
+            string qrBlobUrl = job.PdfFilePath;
+
             var model = new RouterjobPdfVM
             {
                 JobId = job.JobId,
@@ -420,10 +422,8 @@ namespace Identity_Login.Controllers
                 RunTypeName = job.RunType?.Name,
                 ASFName = job.ASF?.Name,
                 MaterailName = job.Materail?.Name,
-                QrCodeBase64 = qrBase64,
-                //ImageBase64 = imageBase64,
+                QrCodeBase64 = qrBlobUrl, // ✅ Pass blob URL instead of base64
                 UploadImages = job.UploadImages?.ToList()
-
             };
 
             return View(model);

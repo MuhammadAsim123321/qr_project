@@ -90,7 +90,12 @@
                             <span class="fw-bold">QR Code</span><br />
                             @if (!string.IsNullOrEmpty(Model.QrCodeBase64))
                             {
-                                <img src="@Model.QrCodeBase64" alt="QR" class="img-thumbnail" style="max-width: 120px; max-height: 120px;" />
+                                <!-- ✅ Use GetBlobImage action instead of base64 -->
+                                <img src="@Url.Action("GetBlobImage", "RouterJobs", new { blobUrl = Model.QrCodeBase64 })"
+                                     alt="QR"
+                                     class="img-thumbnail"
+                                     style="max-width: 120px; max-height: 120px;"
+                                     onerror="this.style.display='none'" />
                             }
                             else
                             {
@@ -135,24 +140,3 @@
 
 
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const processName = "@Model.JobProcessName";
-
-            // Reset: show all
-            document.querySelectorAll(".hideable").forEach(el => el.style.display = "");
-
-            if (processName.includes("Passivation Process (Method 1)") || processName.includes("Passivation Process (Method 2)")) {
-                document.querySelectorAll(".run-type, .surface-area, .total-in2, .amps, .amps-per-part").forEach(el => el.style.display = "none");
-            }
-            else if (processName.includes("Chemical Conversion")) {
-                document.querySelectorAll(".amps, .amps-per-part").forEach(el => el.style.display = "none");
-            }
-            else if (processName.includes("Black Oxide Process")) {
-                document.querySelectorAll(".run-type, .surface-area, .total-in2, .amps, .amps-per-part").forEach(el => el.style.display = "none");
-            }
-        });
-    </script>
-}
