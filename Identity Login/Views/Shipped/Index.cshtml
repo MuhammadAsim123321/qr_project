@@ -1,26 +1,24 @@
-﻿
-<div class="container py-4">
+﻿<div class="container py-4">
     <div class="row justify-content-center">
-        <div class="col-lg-8 ">
-            <h2 class="fw-bold text-primary mb-4 justify-content-center">Shipped </h2>
+        <div class="col-lg-10">
+            <h2 class="fw-bold text-primary mb-4 justify-content-center">Shipped</h2>
             <div class="card shadow-lg border-0 fixed-shadow-table">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0">Shipped</h4>
-                   
+                    <h4 class="mb-0">Shipped Orders</h4>
                 </div>
-                <div class="card-body p-0 ">
+                <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table id="routerJobsTable" class="display table table-striped " style="width:100%">
+                        <table id="shippedTable" class="display table table-striped" style="width:100%">
                             <thead>
                                 <tr>
-                                    <th>Customer </th>
+                                    <th>Customer</th>
                                     <th>PO_No</th>
                                     <th>Qty</th>
                                     <th>DrawingNo</th>
                                     <th>Classification</th>
                                     <th>Current Stage</th>
-                                    <th>Shipped On</th> @* this is UpdatedOnDisplay*@
-
+                                    <th>Shipped On</th>
+                                    <th style="width:140px;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -33,49 +31,56 @@
     </div>
 </div>
 
-
-
-
 @section Scripts {
     <script>
-            $(document).ready(function () {
-                $('#routerJobsTable').DataTable({
-                    ajax: {
-                        url: '@Url.Action("GetRouterJobsData", "Shipped")',
-                        type: 'GET',
-                        dataType: 'json',
-                        dataSrc: 'data'
-                    },
-                        order: [],
-            columns: [
-                { data: "customerName" },
-                { data: "verbalNo" },
-                { data: "quantity" },
-                { data: "drawingNo" },
-                { data: "classificationName" },
-                { data: "processStep" },
-                { data: "updatedOnDisplay" },
-               
-            ],
-                    language: {
-                        search: "Search:",
-                        paginate: { previous: "<", next: ">" }
-                    },
-                    pagingType: "simple_numbers",
-                    paging: true,
-                    dom: '<"top"f>rt<"bottom"lp><"clear">'
-                });
-
-                $('.dataTables_length').appendTo('.bottom');
+        $(document).ready(function() {
+            $('#shippedTable').DataTable({
+                ajax: {
+                    url: '@Url.Action("GetRouterJobsData", "Shipped")',
+                    type: 'GET',
+                    dataType: 'json',
+                    dataSrc: 'data'
+                },
+                order: [],
+                columns: [
+                    { data: "customerName" },
+                    { data: "verbalNo" },
+                    { data: "quantity" },
+                    { data: "drawingNo" },
+                    { data: "classificationName" },
+                    { data: "processStep" },
+                    { data: "updatedOnDisplay" },
+                    {
+                        data: "jobId",
+                        render: function(data, type, row) {
+                            return `
+                                        <div class="d-flex justify-content-start gap-2">
+                                            <a href="/Shipped/Details/${data}" class="btn btn-outline-info btn-sm" title="Details">
+                                                <i class="bi bi-info-circle"></i>
+                                            </a>
+                                            <a href="/RouterJobs/Edit/${data}" class="btn btn-outline-warning btn-sm" title="Edit">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </a>
+                                        </div>
+                                    `;
+                        },
+                        orderable: false,
+                        searchable: false
+                    }
+                ],
+                language: {
+                    search: "Search:",
+                    paginate: { previous: "<", next: ">" }
+                },
+                pagingType: "simple_numbers",
+                paging: true,
+                dom: '<"top"f>rt<"bottom"lp><"clear">'
             });
 
-          
-
+            $('.dataTables_length').appendTo('.bottom');
+        });
     </script>
 }
-
-
-
 
 <style>
     .dataTables_filter {
@@ -130,5 +135,9 @@
     .dataTables_scrollBody {
         max-height: 400px !important;
         overflow-y: auto !important;
+    }
+
+    .gap-2 {
+        gap: 0.5rem;
     }
 </style>

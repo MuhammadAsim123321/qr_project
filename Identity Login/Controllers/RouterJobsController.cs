@@ -29,14 +29,24 @@ namespace Identity_Login.Controllers
         private readonly PdfService _pdfService;
         private readonly RazorViewToStringRenderer _renderer;
         private readonly BlobStorageService _blobStorageService;
+        private readonly QrCodeService _qrCodeService;
+        private readonly IServiceProvider _serviceProvider; // ✅ ADD THIS
 
-        public RouterJobsController(ApplicationDbContext context, PdfService pdfService, RazorViewToStringRenderer renderer, BlobStorageService blobStorageService)
+        // ✅ UPDATED: Inject IServiceProvider for creating new DbContext scope
+        public RouterJobsController(
+            ApplicationDbContext context,
+            PdfService pdfService,
+            RazorViewToStringRenderer renderer,
+            BlobStorageService blobStorageService,
+            QrCodeService qrCodeService,
+            IServiceProvider serviceProvider) // ✅ ADD THIS
         {
             _context = context;
             _pdfService = pdfService;
             _renderer = renderer;
             _blobStorageService = blobStorageService;
-            // ✅ REMOVED: No SSL bypass needed here
+            _qrCodeService = qrCodeService;
+            _serviceProvider = serviceProvider; // ✅ ADD THIS
         }
 
         [HttpGet]
@@ -446,10 +456,12 @@ namespace Identity_Login.Controllers
             return View();
         }
 
+
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("CustomerName,JobDetails,PartName,DrawingNo,SurfaceArea,Date,VerbalNo,Quantity,Materail,RCVDBy,ShippedBy,ClassificationId,RunTypeId,ASFId,MaterailId,ProcessId,TotalIn2OfRunRight,DisappearAfterShipped")] RouterJob routerJob,
-    List<IFormFile>? ImageFiles)
+            List<IFormFile>? ImageFiles)
         {
             ModelState.Remove(nameof(routerJob.JobNumber));
             ModelState.Remove(nameof(routerJob.Status));
@@ -476,7 +488,9 @@ namespace Identity_Login.Controllers
 
                     await CompleteFirstProcessStepAsync(routerJob);
                     await SaveJobImagesAsync(routerJob, ImageFiles);
-                    await GenerateAndSaveQrCodeAsync(routerJob);
+
+                    // ✅ FIXED: Await QR generation with proper DbContext scope
+                    await GenerateAndSaveQrCodeAsyncWithScope(routerJob.JobId);
 
                     TempData["success"] = "Job created successfully.";
                     return RedirectToAction(nameof(Index));
@@ -504,9 +518,79 @@ namespace Identity_Login.Controllers
             ViewBag.JobProcessList = new SelectList(_context.JobProcesses.ToList(), "ProcessId", "Name");
 
             return View(routerJob);
-
         }
 
+        private async Task SaveJobImagesAsync(RouterJob job, List<IFormFile>? imageFiles)
+        {
+            if (imageFiles != null && imageFiles.Count > 0)
+            {
+                foreach (var file in imageFiles)
+                {
+                    if (file.Length > 0)
+                    {
+                        var blobUrl = await _blobStorageService.UploadImageAsync(file);
+
+                        var uploadImage = new UploadImage
+                        {
+                            ImagePath = blobUrl,
+                            RouterJobId = job.JobId
+                        };
+                        _context.Add(uploadImage);
+                    }
+                }
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        // ✅ FIXED: Create new DbContext scope for QR generation
+        private async Task GenerateAndSaveQrCodeAsyncWithScope(int jobId)
+        {
+            try
+            {
+                // ✅ Create a new scope to avoid disposed context
+                using (var scope = _serviceProvider.CreateScope())
+                {
+                    var scopedContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                    var qrCodeService = scope.ServiceProvider.GetRequiredService<QrCodeService>();
+
+                    // Fetch the job in this new scope
+                    var job = await scopedContext.RouterJobs
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(j => j.JobId == jobId);
+
+                    if (job != null)
+                    {
+                        var jobVm = new RouterJobVm
+                        {
+                            JobId = job.JobId,
+                            JobNumber = job.JobNumber,
+                            CustomerName = job.CustomerName,
+                            JobDetails = job.JobDetails,
+                            PdfFilePath = ""
+                        };
+
+                        // ✅ Generate QR code using the service
+                        var blobUrl = await qrCodeService.GenerateAndSaveQrAsync(jobVm);
+
+                        if (!string.IsNullOrEmpty(blobUrl))
+                        {
+                            // ✅ Update job with QR code path in the NEW scope
+                            job.PdfFilePath = blobUrl;
+                            scopedContext.Update(job);
+                            await scopedContext.SaveChangesAsync();
+
+                            System.Diagnostics.Debug.WriteLine($"✅ QR Code generated successfully: {blobUrl}");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't crash the application
+                System.Diagnostics.Debug.WriteLine($"❌ QR Code generation failed: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+            }
+        }
 
 
         [HttpGet]
@@ -913,27 +997,27 @@ namespace Identity_Login.Controllers
             }
         }
 
-        private async Task SaveJobImagesAsync(RouterJob job, List<IFormFile>? imageFiles)
-        {
-            if (imageFiles != null && imageFiles.Count > 0)
-            {
-                foreach (var file in imageFiles)
-                {
-                    if (file.Length > 0)
-                    {
-                        var blobUrl = await _blobStorageService.UploadImageAsync(file);
+        //private async Task SaveJobImagesAsync(RouterJob job, List<IFormFile>? imageFiles)
+        //{
+        //    if (imageFiles != null && imageFiles.Count > 0)
+        //    {
+        //        foreach (var file in imageFiles)
+        //        {
+        //            if (file.Length > 0)
+        //            {
+        //                var blobUrl = await _blobStorageService.UploadImageAsync(file);
 
-                        var uploadImage = new UploadImage
-                        {
-                            ImagePath = blobUrl,
-                            RouterJobId = job.JobId
-                        };
-                        _context.Add(uploadImage);
-                    }
-                }
-                await _context.SaveChangesAsync();
-            }
-        }
+        //                var uploadImage = new UploadImage
+        //                {
+        //                    ImagePath = blobUrl,
+        //                    RouterJobId = job.JobId
+        //                };
+        //                _context.Add(uploadImage);
+        //            }
+        //        }
+        //        await _context.SaveChangesAsync();
+        //    }
+        //}
 
         private async Task GenerateAndSaveQrCodeAsync(RouterJob job)
         {
