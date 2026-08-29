@@ -61,7 +61,7 @@ namespace Identity_Login.Services
             if (file == null || file.Length == 0)
                 throw new ArgumentException("File cannot be null or empty");
 
-            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            var fileName = $"uploadedImages/{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
             var blobClient = _containerClient.GetBlobClient(fileName);
 
             using var stream = file.OpenReadStream();
@@ -77,7 +77,7 @@ namespace Identity_Login.Services
             if (fileBytes == null || fileBytes.Length == 0)
                 throw new ArgumentException("File bytes cannot be null or empty");
 
-            var uniqueFileName = $"{Path.GetFileNameWithoutExtension(fileNameHint)}_{Guid.NewGuid()}{Path.GetExtension(fileNameHint)}";
+            var uniqueFileName = $"qrImages/{Path.GetFileNameWithoutExtension(fileNameHint)}_{Guid.NewGuid()}{Path.GetExtension(fileNameHint)}";
             var blobClient = _containerClient.GetBlobClient(uniqueFileName);
 
             using var stream = new MemoryStream(fileBytes);
@@ -96,6 +96,9 @@ namespace Identity_Login.Services
             try
             {
                 var fileName = GetFileNameFromUrl(blobUrl);
+                if (fileName == null)
+                    return false;
+
                 var blobClient = _containerClient.GetBlobClient(fileName);
                 return await blobClient.DeleteIfExistsAsync();
             }
@@ -114,6 +117,9 @@ namespace Identity_Login.Services
                     return null;
 
                 var fileName = GetFileNameFromUrl(blobUrl);
+                if (fileName == null)
+                    return null;
+
                 var blobClient = _containerClient.GetBlobClient(fileName);
 
                 if (!await blobClient.ExistsAsync())
@@ -128,11 +134,33 @@ namespace Identity_Login.Services
                 return null;
             }
         }
-        // this is GetFileNameFromUrl that extracts the file name from the blob URL
-        private static string GetFileNameFromUrl(string blobUrl)
+        // this is GetFileNameFromUrl that extracts the blob name (including its folder)
+        // from the blob URL relative to the container root.
+        // e.g. https://.../images/uploadedImages/abc.png -> "uploadedImages/abc.png"
+        private string? GetFileNameFromUrl(string blobUrl)
         {
-            var uri = new Uri(blobUrl);
-            return Path.GetFileName(uri.LocalPath);
+            try
+            {
+                if (string.IsNullOrEmpty(blobUrl))
+                    return null;
+
+                var uri = new Uri(blobUrl);
+                var path = uri.AbsolutePath.TrimStart('/'); // e.g. "images/uploadedImages/abc.png"
+
+                // The container's name is the first path segment. Strip it so we get the
+                // blob name relative to the container root (preserving any subfolders).
+                var containerName = _containerClient.Name;
+                if (path.StartsWith(containerName + "/", StringComparison.OrdinalIgnoreCase))
+                {
+                    path = path.Substring(containerName.Length + 1);
+                }
+
+                return string.IsNullOrEmpty(path) ? null : path;
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 }
