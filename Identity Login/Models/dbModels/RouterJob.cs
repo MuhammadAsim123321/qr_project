@@ -42,7 +42,7 @@ namespace Identity_Login.Models.dbModels
         [MaxLength(100)]
         public string ShippedBy { get; set; } = string.Empty;
 
-        [MaxLength(200)]
+        [MaxLength(2000)]
         public string? JobDetails { get; set; }
         [Required]
         public string QrCodeData { get; set; } = string.Empty;  // Data encoded in QR

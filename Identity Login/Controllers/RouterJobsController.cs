@@ -31,6 +31,8 @@ namespace Identity_Login.Controllers
         private readonly BlobStorageService _blobStorageService;
         private readonly QrCodeService _qrCodeService;
         private readonly IServiceProvider _serviceProvider; // ✅ ADD THIS
+        private readonly HttpClient _httpClient; // ✅ ADD THIS
+
 
         // ✅ UPDATED: Inject IServiceProvider for creating new DbContext scope
         public RouterJobsController(
@@ -39,14 +41,16 @@ namespace Identity_Login.Controllers
             RazorViewToStringRenderer renderer,
             BlobStorageService blobStorageService,
             QrCodeService qrCodeService,
-            IServiceProvider serviceProvider) // ✅ ADD THIS
+            IServiceProvider serviceProvider,
+            HttpClient httpClient) // ✅ ADD THIS
         {
             _context = context;
             _pdfService = pdfService;
             _renderer = renderer;
             _blobStorageService = blobStorageService;
             _qrCodeService = qrCodeService;
-            _serviceProvider = serviceProvider; // ✅ ADD THIS
+            _serviceProvider = serviceProvider;
+            _httpClient = httpClient;           // ✅ ADD THIS
         }
 
         [HttpGet]
@@ -474,6 +478,14 @@ namespace Identity_Login.Controllers
             }
             var disappearVal = Request.Form["DisappearAfterShipped"];
             routerJob.DisappearAfterShipped = disappearVal.Contains("true") || disappearVal.Contains("on");
+
+            // ✅ CHANGED: Length validation now shows alarm only, never blocks submission
+            var (isValid, alarmMessage) = ValidateJobDetailsLength(routerJob.JobDetails);
+            if (!string.IsNullOrEmpty(alarmMessage))
+            {
+                TempData["warning"] = alarmMessage; // Show as warning, not error
+            }
+
             if (ModelState.IsValid)
             {
                 try
@@ -662,6 +674,13 @@ namespace Identity_Login.Controllers
             if (id != vm.JobId)
                 return NotFound();
 
+            // ✅ CHANGED: Length validation now shows alarm only, never blocks submission
+            var (isValid, alarmMessage) = ValidateJobDetailsLength(vm.JobDetails);
+            if (!string.IsNullOrEmpty(alarmMessage))
+            {
+                TempData["warning"] = alarmMessage; // Show as warning, not error
+            }
+
             if (ModelState.IsValid)
             {
                 try
@@ -744,32 +763,8 @@ namespace Identity_Login.Controllers
 
                     await _context.SaveChangesAsync();
 
-                    // Prepare the view model for QR generation
-                    var jobVm = new RouterJobVm
-                    {
-                        JobId = job.JobId,
-                        JobNumber = job.JobNumber,
-                        CustomerName = job.CustomerName,
-                        JobDetails = job.JobDetails,
-                        PdfFilePath = ""
-                    };
-
-                    // Generate QR + PDF
-                    using (var httpClient = new HttpClient())
-                    {
-                        var baseUrl = $"{Request.Scheme}://{Request.Host}";
-                        var response = await httpClient.PostAsJsonAsync($"{baseUrl}/QRCode/Generate", jobVm);
-
-                        if (response.IsSuccessStatusCode)
-                        {
-                            var qrResult = await response.Content.ReadFromJsonAsync<QrCodeResult>();
-                            if (qrResult != null && !string.IsNullOrEmpty(qrResult.SavedPath))
-                            {
-                                job.PdfFilePath = qrResult.SavedPath;
-                                await _context.SaveChangesAsync();
-                            }
-                        }
-                    }
+                    // ✅ FIXED: Use injected HttpClient with SSL bypass (same as Create method)
+                    await GenerateAndSaveQrCodeAsyncWithScope(job.JobId);
 
                     TempData["success"] = "Router Job updated successfully.";
                     return RedirectToAction(nameof(Index));
@@ -963,6 +958,40 @@ namespace Identity_Login.Controllers
             return jobNumber;
         }
 
+        // ✅ CHANGED: Validate JobDetails length (max 2000 characters, informational alarms only - no blocking)
+        private (bool isValid, string alarmMessage) ValidateJobDetailsLength(string? jobDetails, int maxChars = 2000)
+        {
+            if (string.IsNullOrWhiteSpace(jobDetails))
+                return (true, ""); // Empty is valid
+
+            // Count characters (this must match the DB column size of nvarchar(2000))
+            var charCount = jobDetails.Length;
+
+            // ✅ CHANGED: Now we ALWAYS return true (allow submission), but set friendly alarm messages
+            // Alarms appear at 500, 1000, 1500, and 2000 characters - but submission is never blocked by them
+            string alarm = "";
+
+            if (charCount >= 2000)
+            {
+                alarm = $"MAX LIMIT REACHED: You have entered {charCount} of 2000 characters. No more text can be added.";
+            }
+            else if (charCount >= 1500)
+            {
+                alarm = $"WARNING: You have entered {charCount} of 2000 characters. You are getting close to the limit.";
+            }
+            else if (charCount >= 1000)
+            {
+                alarm = $"CAUTION: You have entered {charCount} of 2000 characters.";
+            }
+            else if (charCount >= 500)
+            {
+                alarm = $"NOTE: You have entered {charCount} of 2000 characters.";
+            }
+
+            // ALWAYS return true - submission is NEVER blocked
+            return (true, alarm);
+        }
+
         private class QrCodeResult
         {
             public string Message { get; set; }
@@ -1042,19 +1071,28 @@ namespace Identity_Login.Controllers
 
                 using (var httpClient = new HttpClient(handler))
                 {
-                    var baseUrl = $"{Request.Scheme}://{Request.Host}";
-                    var response = await httpClient.PostAsJsonAsync($"{baseUrl}/QRCode/Generate", jobVm);
-
-                    if (response.IsSuccessStatusCode)
+                    try
                     {
-                        var qrResult = await response.Content.ReadFromJsonAsync<QrCodeResult>();
-                        if (qrResult != null && !string.IsNullOrEmpty(qrResult.SavedPath))
+                        var baseUrl = $"{Request.Scheme}://{Request.Host}";
+                        var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/QRCode/Generate", jobVm);
+
+                        if (response.IsSuccessStatusCode)
                         {
-                            job.PdfFilePath = qrResult.SavedPath;
-                            _context.Update(job);
-                            await _context.SaveChangesAsync();
+                            var qrResult = await response.Content.ReadFromJsonAsync<QrCodeResult>();
+                            if (qrResult != null && !string.IsNullOrEmpty(qrResult.SavedPath))
+                            {
+                                job.PdfFilePath = qrResult.SavedPath;
+                                _context.Update(job);
+                                await _context.SaveChangesAsync();
+                            }
                         }
                     }
+                    catch (HttpRequestException ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"❌ HTTP Request Error: {ex.Message}");
+                        throw;
+                    }
+
                 }
             }
         }
