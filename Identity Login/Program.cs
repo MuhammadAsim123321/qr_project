@@ -32,6 +32,8 @@ builder.Services.AddSingleton<BlobStorageService>(provider =>
     return new BlobStorageService(config, httpClientHandler);
 });
 
+//builder.Services.AddSingleton<BlobMigrationService>();
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
