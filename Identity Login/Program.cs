@@ -16,6 +16,21 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<QrCodeService>();
 
+// ✅ ADD THIS: Scoped HttpClient with SSL bypass for QR Code API calls
+builder.Services.AddScoped<HttpClient>(provider =>
+{
+    var httpClientHandler = new HttpClientHandler();
+
+    // Only bypass SSL for development
+    if (!builder.Environment.IsProduction())
+    {
+        httpClientHandler.ServerCertificateCustomValidationCallback =
+            (message, cert, chain, errors) => true;
+    }
+
+    return new HttpClient(httpClientHandler, disposeHandler: false);
+});
+
 // ✅ OPTIMIZED: Use targeted SSL bypass only for HttpClient (not global)
 builder.Services.AddSingleton<BlobStorageService>(provider =>
 {

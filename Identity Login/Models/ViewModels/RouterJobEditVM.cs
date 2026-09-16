@@ -1,10 +1,14 @@
-﻿namespace Identity_Login.Models.ViewModels
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Identity_Login.Models.ViewModels
 {
     // ViewModels/RouterJobEditVm.cs
     public class RouterJobEditVm
     {
         public int JobId { get; set; }
         public string CustomerName { get; set; }
+
+        [MaxLength(2000)]
         public string JobDetails { get; set; }
         public string PartName { get; set; }
         public string DrawingNo { get; set; }

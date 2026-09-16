@@ -18,7 +18,7 @@
                             <div class="col-md-6">
                                 <label asp-for="CustomerName" class="form-label fw-bold">Customer Name</label>
                                 <input asp-for="CustomerName" class="form-control" id="customerInput" list="customerList" autocomplete="off" />
-                                <datalist id="customerList"></datalist> 
+                                <datalist id="customerList"></datalist>
                                 <span asp-validation-for="CustomerName" class="text-danger"></span>
                             </div>
                             <div class="col-md-6">
@@ -117,8 +117,8 @@
                                 <input asp-for="TotalIn2OfRunRight" class="form-control" type="number" step="any" id="TotalIn2OfRunRight" />
                                 <span asp-validation-for="TotalIn2OfRunRight" class="text-danger"></span>
                             </div>
+
    
-                           
                         </div>
 
                         <div class="row mb-3">
@@ -140,279 +140,325 @@
                                 </select>
                                 <span asp-validation-for="ClassificationId" class="text-danger"></span>
                             </div>
-                        <div class="row mb-3">
+                            <div class="row mb-3">
                                 <div class="mb-3 col-md-3 amps hideable">
-                                <label class="form-label fw-bold">AMPS</label>
-                                <input class="form-control" type="number" step="any" id="AMPS" disabled style="background-color: #fff;"  />
-                            </div>
+                                    <label class="form-label fw-bold">AMPS</label>
+                                    <input class="form-control" type="number" step="any" id="AMPS" disabled style="background-color: #fff;" />
+                                </div>
                                 <div class="mb-3 col-md-3 amps-per-part hideable">
-                                <label class="form-label fw-bold">AMPS Per Part</label>
-                                <input class="form-control" type="number" step="any" id="AMPSPerParts" disabled style="background-color: #fff;" />
+                                    <label class="form-label fw-bold">AMPS Per Part</label>
+                                    <input class="form-control" type="number" step="any" id="AMPSPerParts" disabled style="background-color: #fff;" />
+                                </div>
+                                <div class="mb-3 col-md-3">
+                                    <label class="form-label fw-bold">Time (Minutes)</label>
+                                    <input class="form-control" type="number" id="TimeMinutes" disabled style="background-color: #fff;" />
+                                </div>
+                                <div class="mb-3 col-md-3">
+                                    <label class="form-label fw-bold">Time (Seconds)</label>
+                                    <input class="form-control" type="number" id="TimeSeconds" disabled style="background-color: #fff;" />
+                                </div>
                             </div>
-                            <div class="mb-3 col-md-3">
-                                <label class="form-label fw-bold">Time (Minutes)</label>
-                                <input class="form-control" type="number" id="TimeMinutes" disabled style="background-color: #fff;"   />
-                            </div>
-                            <div class="mb-3 col-md-3">
-                                <label class="form-label fw-bold">Time (Seconds)</label>
-                                <input class="form-control" type="number" id="TimeSeconds" disabled style="background-color: #fff;" />
-                            </div>
-                        </div>
-                        <!-- Example: Last Row for Job Details (full width textarea) -->
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <label asp-for="JobDetails" class="form-label fw-bold">Job Description</label>
-                                <textarea asp-for="JobDetails" class="form-control" rows="6"></textarea>
+                            <!-- Example: Last Row for Job Details (full width textarea) -->
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+<label asp-for="JobDetails" class="form-label fw-bold">Job Description</label>
+                                <textarea asp-for="JobDetails" class="form-control" rows="8" id="jobDetailsInput" maxlength="2000" placeholder="Enter job description (max 2000 characters)"></textarea>
                                 <span asp-validation-for="JobDetails" class="text-danger"></span>
+                                <!-- ✅ CHANGED: Character counter with progressive alarms (500/1000/1500/2000) - informational -->
+                                <small class="d-block mt-2" id="wordCountDisplay">
+                                    <span id="wordCount">0</span> / 2000 characters
+                                </small>
+                                    <!-- ✅ Alarm messages appear here only (no border styling, submission always allowed) -->
+                                    <div id="wordAlarmContainer" style="margin-top: 10px; display: none;">
+                                        <span id="wordAlarm" class="badge bg-warning text-dark" style="font-size: 14px; padding: 8px 12px;"></span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="d-flex justify-content-between">
-                            <a asp-action="Index" class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-left"></i> Back to List
-                            </a>
-                            <button type="submit" class="btn btn-success">
-                                <i class="bi bi-plus-circle"></i> Create
-                            </button>
-                        </div>
-                    </form>
+                            <div class="d-flex justify-content-between">
+                                <a asp-action="Index" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left"></i> Back to List
+                                </a>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-plus-circle"></i> Create
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-    <script>
-        $(document).ready(function () {
-            function updateClassificationDropdown() {
-                var asfId = $('#ASFId').val();
-                var processId = $('#ProcessId').val();
-                var $classification = $('#ClassificationId');
-                $classification.empty();
-                $classification.append($('<option>', { value: '', text: '-- Select Classification --' }));
+    @section Scripts {
+        <partial name="_ValidationScriptsPartial" />
+        <script>
+            $(document).ready(function() {
+                function updateClassificationDropdown() {
+                    var asfId = $('#ASFId').val();
+                    var processId = $('#ProcessId').val();
+                    var $classification = $('#ClassificationId');
+                    $classification.empty();
+                    $classification.append($('<option>', { value: '', text: '-- Select Classification --' }));
 
-                $.getJSON('@Url.Action("GetClassifications", "RouterJobs")', { asfId: asfId, processId: processId }, function (data) {
-                    $.each(data, function (i, item) {
-                        // ✅ Add data-minutes attribute
-                        $classification.append($('<option>', {
-                            value: item.classificationId,
-                            text: item.name,
-                            'data-minutes': item.minutes // ✅ THIS IS THE KEY FIX
-                        }));
+                    $.getJSON('@Url.Action("GetClassifications", "RouterJobs")', { asfId: asfId, processId: processId }, function(data) {
+                        $.each(data, function(i, item) {
+                            // ✅ Add data-minutes attribute
+                            $classification.append($('<option>', {
+                                value: item.classificationId,
+                                text: item.name,
+                                'data-minutes': item.minutes // ✅ THIS IS THE KEY FIX
+                            }));
+                        });
                     });
-                });
-            }
-
-            $('#ASFId').change(updateClassificationDropdown);
-            $('#ProcessId').change(updateClassificationDropdown);
-
-            // Initial call in case of edit or default values
-            updateClassificationDropdown();
-        });
-    </script>
-    @* This functipon is calling the suggestion Name list for customer  *@
-    <script>
-        $(document).ready(function () {
-            let timeout = null;
-
-            $('#customerInput').on('input', function () {
-                clearTimeout(timeout);
-                let term = $(this).val();
-
-                // Only search if user has typed at least 1 character
-                if (term.length < 1) {
-                    $('#customerList').empty();
-                    return;
                 }
 
-                // Debounce: Wait 300ms after the user stops typing to call the server
-                timeout = setTimeout(function () {
-                    $.ajax({
-                        url: '@Url.Action("GetCustomerSuggestions", "RouterJobs")',
-                        type: 'GET',
-                        data: { term: term },
-                        success: function (data) {
-                            let $datalist = $('#customerList');
-                            $datalist.empty(); // Clear old suggestions
+                $('#ASFId').change(updateClassificationDropdown);
+                $('#ProcessId').change(updateClassificationDropdown);
 
-                            $.each(data, function (i, name) {
-                                $datalist.append($('<option>').val(name));
-                            });
-                        },
-                        error: function (err) {
-                            console.error("Error fetching suggestions:", err);
-                        }
-                    });
-                }, 300);
+                // Initial call in case of edit or default values
+                updateClassificationDropdown();
             });
-        });</script>
-    <script>
-        $(document).ready(function () {
-            let manualOverride = false;
-
-            function updateTotalIn2OfRunRight() {
-                if (manualOverride) return;
-                var qty = parseFloat($('#Quantity').val()) || 0;
-                var area = parseFloat($('#SurfaceArea').val()) || 0;
-                var total = qty * area;
-                $('#TotalIn2OfRunRight').val(total ? total.toFixed(3) : '');
-            }
-
-            $('#TotalIn2OfRunRight').on('input', function () {
-                manualOverride = true;
-            });
-
-            $('#Quantity, #SurfaceArea').on('input', function () {
-                manualOverride = false;
-                updateTotalIn2OfRunRight();
-            });
-
-            updateTotalIn2OfRunRight();
-        });
-    </script>
-    <script>
-        $(document).ready(function () {
-            function updateCalculatedFields() {
-                var qty = parseFloat($('#Quantity').val()) || 0;
-                var area = parseFloat($('#SurfaceArea').val()) || 0;
-                var asfId = $('#ASFId').val();
-                var asfText = $('#ASFId option:selected').text().trim();
-                var totalIn2 = parseFloat($('#TotalIn2OfRunRight').val()) || (qty * area);
-                var selectedProcess = $('#ProcessId option:selected').text();
-                var classificationId = $('#ClassificationId').val();
-                var classificationText = $('#ClassificationId option:selected').text().trim();
-                var baseMinutes = parseInt($('#ClassificationId option:selected').data('minutes')) || 0;
-                var isAsf8 = asfId === '1' || asfText.toLowerCase().includes('8 asf') || asfText.toLowerCase().startsWith('8');
-                var isType2Class1Clear = classificationId === '2' || classificationText === "Type II, Class 1 (CLEAR)";
-                var minutes = baseMinutes;
-
-                if (isAsf8 && isType2Class1Clear) {
-                    minutes = 27;
-                } else if (selectedProcess.includes("Black Oxide Process")) {
-                    minutes = 15;
-                }
-
-                // For 8 ASF (ASFId = 1), use division by 18; otherwise use standard formula
-                if (asfId === '1' || asfText.toLowerCase().includes('8 asf') || asfText.toLowerCase().startsWith('8')) {
-                    $('#AMPS').val((totalIn2 / 18.0).toFixed(3));
-                    $('#AMPSPerParts').val((area / 18.0).toFixed(3));
-                } else {
-                    var asfConstant = asfText.includes('16') ? (1.0/9.0) : (1.0/12.0);
-                    $('#AMPS').val((totalIn2 * asfConstant).toFixed(3));
-                    $('#AMPSPerParts').val((area * asfConstant).toFixed(3));
-                }
-
-                $('#TimeMinutes').val(minutes);
-                $('#TimeSeconds').val(minutes * 60);
-            }
-
-            // ✅ Bind to all relevant fields
-            $('#Quantity, #SurfaceArea, #ASFId, #ClassificationId, #TotalIn2OfRunRight').on('input change', updateCalculatedFields);
-
-            // Initial call
-            updateCalculatedFields();
-        });
-    </script>
-
-
-    <script>
-        // hide/show AMPS fields based on Job Process
-        function toggleAmpsFields() {
-            var selectedText = $('#ProcessId option:selected').text();
-            var hideList = [
-                "Passivation Process (Method 1)",
-                "Passivation Process (Method 2)",
-                "Black Oxide Process",
-                "Chemical Conversion"
-            ];
-
-            if (hideList.includes(selectedText)) {
-                $('#AMPS').closest('.col-md-3').hide();
-                $('#AMPSPerParts').closest('.col-md-3').hide();
-            } else {
-                $('#AMPS').closest('.col-md-3').show();
-                $('#AMPSPerParts').closest('.col-md-3').show();
-            }
-        }
-
-        $('#ProcessId').change(toggleAmpsFields);
-        toggleAmpsFields(); // initial call
-    </script>
-    @* This script is handling the Material 2024 to show only for Chemical Conversion and Anodizing Process *@
-    <script>
-                $(document).on('change', '#ProcessId', function () {
-            let proc = $(this).find('option:selected').text();
-            let isSpec = proc.includes("Anodizing") || proc.includes("Chemical Conversion");
-            $("#MaterailId option[value='7']").toggle(isSpec);
-            if (!isSpec && $("#MaterailId").val() == "7") $("#MaterailId").val("");
-        });
         </script>
+        @* This functipon is calling the suggestion Name list for customer  *@
+        <script>
+            $(document).ready(function() {
+                let timeout = null;
+
+                $('#customerInput').on('input', function() {
+                    clearTimeout(timeout);
+                    let term = $(this).val();
+
+                    // Only search if user has typed at least 1 character
+                    if (term.length < 1) {
+                        $('#customerList').empty();
+                        return;
+                    }
+
+                    // Debounce: Wait 300ms after the user stops typing to call the server
+                    timeout = setTimeout(function() {
+                        $.ajax({
+                            url: '@Url.Action("GetCustomerSuggestions", "RouterJobs")',
+                            type: 'GET',
+                            data: { term: term },
+                            success: function(data) {
+                                let $datalist = $('#customerList');
+                                $datalist.empty(); // Clear old suggestions
+
+                                $.each(data, function(i, name) {
+                                    $datalist.append($('<option>').val(name));
+                                });
+                            },
+                            error: function(err) {
+                                console.error("Error fetching suggestions:", err);
+                            }
+                        });
+                    }, 300);
+                });
+            });</script>
+            <script>
+                $(document).ready(function() {
+                    let manualOverride = false;
+
+                    function updateTotalIn2OfRunRight() {
+                        if (manualOverride) return;
+                        var qty = parseFloat($('#Quantity').val()) || 0;
+                        var area = parseFloat($('#SurfaceArea').val()) || 0;
+                        var total = qty * area;
+                        $('#TotalIn2OfRunRight').val(total ? total.toFixed(3) : '');
+                    }
+
+                    $('#TotalIn2OfRunRight').on('input', function() {
+                        manualOverride = true;
+                    });
+
+                    $('#Quantity, #SurfaceArea').on('input', function() {
+                        manualOverride = false;
+                        updateTotalIn2OfRunRight();
+                    });
+
+                    updateTotalIn2OfRunRight();
+                });
+            </script>
+            <script>
+                $(document).ready(function() {
+                    function updateCalculatedFields() {
+                        var qty = parseFloat($('#Quantity').val()) || 0;
+                        var area = parseFloat($('#SurfaceArea').val()) || 0;
+                        var asfId = $('#ASFId').val();
+                        var asfText = $('#ASFId option:selected').text().trim();
+                        var totalIn2 = parseFloat($('#TotalIn2OfRunRight').val()) || (qty * area);
+                        var selectedProcess = $('#ProcessId option:selected').text();
+                        var classificationId = $('#ClassificationId').val();
+                        var classificationText = $('#ClassificationId option:selected').text().trim();
+                        var baseMinutes = parseInt($('#ClassificationId option:selected').data('minutes')) || 0;
+                        var isAsf8 = asfId === '1' || asfText.toLowerCase().includes('8 asf') || asfText.toLowerCase().startsWith('8');
+                        var isType2Class1Clear = classificationId === '2' || classificationText === "Type II, Class 1 (CLEAR)";
+                        var minutes = baseMinutes;
+
+                        if (isAsf8 && isType2Class1Clear) {
+                            minutes = 27;
+                        } else if (selectedProcess.includes("Black Oxide Process")) {
+                            minutes = 15;
+                        }
+
+                        // For 8 ASF (ASFId = 1), use division by 18; otherwise use standard formula
+                        if (asfId === '1' || asfText.toLowerCase().includes('8 asf') || asfText.toLowerCase().startsWith('8')) {
+                            $('#AMPS').val((totalIn2 / 18.0).toFixed(3));
+                            $('#AMPSPerParts').val((area / 18.0).toFixed(3));
+                        } else {
+                            var asfConstant = asfText.includes('16') ? (1.0 / 9.0) : (1.0 / 12.0);
+                            $('#AMPS').val((totalIn2 * asfConstant).toFixed(3));
+                            $('#AMPSPerParts').val((area * asfConstant).toFixed(3));
+                        }
+
+                        $('#TimeMinutes').val(minutes);
+                        $('#TimeSeconds').val(minutes * 60);
+                    }
+
+                    // ✅ Bind to all relevant fields
+                    $('#Quantity, #SurfaceArea, #ASFId, #ClassificationId, #TotalIn2OfRunRight').on('input change', updateCalculatedFields);
+
+                    // Initial call
+                    updateCalculatedFields();
+                });
+            </script>
 
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
+            <script>
+                // hide/show AMPS fields based on Job Process
+                function toggleAmpsFields() {
+                    var selectedText = $('#ProcessId option:selected').text();
+                    var hideList = [
+                        "Passivation Process (Method 1)",
+                        "Passivation Process (Method 2)",
+                        "Black Oxide Process",
+                        "Chemical Conversion"
+                    ];
 
-            const processSelect = document.getElementById("ProcessId");
-
-            function toggleFields() {
-                const selectedText = processSelect.options[processSelect.selectedIndex]?.text || "";
-
-                // Reset: show all
-                document.querySelectorAll(".hideable").forEach(el => el.style.display = "");
-
-                if (selectedText.includes("Passivation Process (Method 1)") || selectedText.includes("Passivation Process (Method 2)")) {
-                    document.querySelectorAll(".run-type, .surface-area, .total-in2, .amps, .amps-per-part").forEach(el => el.style.display = "none");
+                    if (hideList.includes(selectedText)) {
+                        $('#AMPS').closest('.col-md-3').hide();
+                        $('#AMPSPerParts').closest('.col-md-3').hide();
+                    } else {
+                        $('#AMPS').closest('.col-md-3').show();
+                        $('#AMPSPerParts').closest('.col-md-3').show();
+                    }
                 }
-                else if (selectedText.includes("Chemical Conversion")) {
-                    document.querySelectorAll(".amps, .amps-per-part").forEach(el => el.style.display = "none");
-                }
-                else if (selectedText.includes("Black Oxide Process")) {
-                    document.querySelectorAll(".run-type, .surface-area, .total-in2, .amps, .amps-per-part").forEach(el => el.style.display = "none");
-                }
-            }
 
-            processSelect.addEventListener("change", toggleFields);
-            toggleFields();
-        });
-    </script>
-
-    <script>
-        $(document).ready(function () {
-            function updateTimeLogic() {
-                var asfId = $('#ASFId').val();
-                var asfText = $('#ASFId option:selected').text().trim();
-                var classificationId = $('#ClassificationId').val();
-                var classificationText = $('#ClassificationId option:selected').text().trim();
-                var selectedProcess = $('#ProcessId option:selected').text();
-
-                // Get base minutes from data attribute
-                var baseMinutes = parseInt($('#ClassificationId option:selected').data('minutes')) || 0;
-                var finalMinutes = baseMinutes;
-                var isAsf8 = asfId === '1' || asfText.toLowerCase().includes('8 asf') || asfText.toLowerCase().startsWith('8');
-                var isType2Class1Clear = classificationId === '2' || classificationText === "Type II, Class 1 (CLEAR)";
-
-                // Apply specific logic: If ASF contains "8" and Classification is "Type II, Class 1 (CLEAR)"
-                if (isAsf8 && isType2Class1Clear) {
-                    finalMinutes = 27;
-                }
-                // Keep your existing override for Black Oxide
-                else if (selectedProcess.includes("Black Oxide Process")) {
-                    finalMinutes = 15;
-                }
-
-                $('#TimeMinutes').val(finalMinutes);
-                $('#TimeSeconds').val(finalMinutes * 60);
-            }
-
-            // Bind to the dropdowns that trigger the logic
-            $('#ASFId, #ClassificationId, #ProcessId').on('change', updateTimeLogic);
-
-            // Run on load
-            updateTimeLogic();
-        });
-    </script>
+                $('#ProcessId').change(toggleAmpsFields);
+                toggleAmpsFields(); // initial call
+            </script>
+            @* This script is handling the Material 2024 to show only for Chemical Conversion and Anodizing Process *@
+            <script>
+                $(document).on('change', '#ProcessId', function() {
+                    let proc = $(this).find('option:selected').text();
+                    let isSpec = proc.includes("Anodizing") || proc.includes("Chemical Conversion");
+                    $("#MaterailId option[value='7']").toggle(isSpec);
+                    if (!isSpec && $("#MaterailId").val() == "7") $("#MaterailId").val("");
+                });
+            </script>
 
 
-}
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+
+                    const processSelect = document.getElementById("ProcessId");
+
+                    function toggleFields() {
+                        const selectedText = processSelect.options[processSelect.selectedIndex]?.text || "";
+
+                        // Reset: show all
+                        document.querySelectorAll(".hideable").forEach(el => el.style.display = "");
+
+                        if (selectedText.includes("Passivation Process (Method 1)") || selectedText.includes("Passivation Process (Method 2)")) {
+                            document.querySelectorAll(".run-type, .surface-area, .total-in2, .amps, .amps-per-part").forEach(el => el.style.display = "none");
+                        }
+                        else if (selectedText.includes("Chemical Conversion")) {
+                            document.querySelectorAll(".amps, .amps-per-part").forEach(el => el.style.display = "none");
+                        }
+                        else if (selectedText.includes("Black Oxide Process")) {
+                            document.querySelectorAll(".run-type, .surface-area, .total-in2, .amps, .amps-per-part").forEach(el => el.style.display = "none");
+                        }
+                    }
+
+                    processSelect.addEventListener("change", toggleFields);
+                    toggleFields();
+                });
+            </script>
+
+            <script>
+                $(document).ready(function() {
+                    function updateTimeLogic() {
+                        var asfId = $('#ASFId').val();
+                        var asfText = $('#ASFId option:selected').text().trim();
+                        var classificationId = $('#ClassificationId').val();
+                        var classificationText = $('#ClassificationId option:selected').text().trim();
+                        var selectedProcess = $('#ProcessId option:selected').text();
+
+                        // Get base minutes from data attribute
+                        var baseMinutes = parseInt($('#ClassificationId option:selected').data('minutes')) || 0;
+                        var finalMinutes = baseMinutes;
+                        var isAsf8 = asfId === '1' || asfText.toLowerCase().includes('8 asf') || asfText.toLowerCase().startsWith('8');
+                        var isType2Class1Clear = classificationId === '2' || classificationText === "Type II, Class 1 (CLEAR)";
+
+                        // Apply specific logic: If ASF contains "8" and Classification is "Type II, Class 1 (CLEAR)"
+                        if (isAsf8 && isType2Class1Clear) {
+                            finalMinutes = 27;
+                        }
+                        // Keep your existing override for Black Oxide
+                        else if (selectedProcess.includes("Black Oxide Process")) {
+                            finalMinutes = 15;
+                        }
+
+                        $('#TimeMinutes').val(finalMinutes);
+                        $('#TimeSeconds').val(finalMinutes * 60);
+                    }
+
+                    // Bind to the dropdowns that trigger the logic
+                    $('#ASFId, #ClassificationId, #ProcessId').on('change', updateTimeLogic);
+
+                    // Run on load
+                    updateTimeLogic();
+
+                    // ✅ CHANGED: Real-time character counter with friendly alarms (informational only)
+                    const MAX_CHARS = 2000;
+                    const $jobDetailsInput = $('#jobDetailsInput');
+                    const $wordCount = $('#wordCount');
+                    const $wordAlarmContainer = $('#wordAlarmContainer');
+                    const $wordAlarm = $('#wordAlarm');
+
+                    function updateWordCount() {
+                        const charCount = $jobDetailsInput.val().length;
+                        $wordCount.text(charCount);
+
+                        // ✅ CHANGED: Show friendly messages at 500/1000/1500/2000 characters
+                        if (charCount >= MAX_CHARS) {
+                            $wordAlarm.html('MAX LIMIT REACHED: You have entered ' + charCount + ' of 2000 characters. No more text can be added.');
+                            $wordAlarm.removeClass('bg-danger bg-warning bg-info bg-secondary text-dark text-white').addClass('bg-danger text-white');
+                            $wordAlarmContainer.show();
+                        } else if (charCount >= 1500) {
+                            $wordAlarm.html('WARNING: You have entered ' + charCount + ' of 2000 characters. You are getting close to the limit.');
+                            $wordAlarm.removeClass('bg-danger bg-warning bg-info bg-secondary text-dark text-white').addClass('bg-warning text-dark');
+                            $wordAlarmContainer.show();
+                        } else if (charCount >= 1000) {
+                            $wordAlarm.html('CAUTION: You have entered ' + charCount + ' of 2000 characters.');
+                            $wordAlarm.removeClass('bg-danger bg-warning bg-info bg-secondary text-dark text-white').addClass('bg-info text-dark');
+                            $wordAlarmContainer.show();
+                        } else if (charCount >= 500) {
+                            $wordAlarm.html('NOTE: You have entered ' + charCount + ' of 2000 characters.');
+                            $wordAlarm.removeClass('bg-danger bg-warning bg-info bg-secondary text-dark text-white').addClass('bg-secondary text-white');
+                            $wordAlarmContainer.show();
+                        } else {
+                            $wordAlarmContainer.hide();
+                        }
+
+                        // ✅ Alarm is informational only - submission is never blocked by it
+                    }
+
+                    $jobDetailsInput.on('input', updateWordCount);
+                    updateWordCount(); // Initialize on page load
+                });
+            </script>
+
+
+        }
