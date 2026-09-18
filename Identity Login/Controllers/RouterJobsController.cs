@@ -758,9 +758,6 @@ namespace Identity_Login.Controllers
                         await _context.SaveChangesAsync();
                     }
 
-                    // Generate new random JobNumber
-                    job.JobNumber = GenerateUniqueJobNumber();
-
                     await _context.SaveChangesAsync();
 
                     // ✅ FIXED: Use injected HttpClient with SSL bypass (same as Create method)
