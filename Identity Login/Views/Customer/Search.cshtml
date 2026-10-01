@@ -12,7 +12,7 @@
                 <div class="card-body">
                     <form asp-action="Search" method="post" class="d-flex flex-column align-items-center">
                       @*   <label class="form-label fw-bolder mb-3">Type your Job Number</label> *@
-                        <input type="text" name="jobNumber" id="jobNumber" autofocus class="form-control form-control-lg mb-3 w-100" style="max-width:800px;" placeholder="Enter your Job Number" required />
+                        <input type="text" name="jobNumber" id="jobNumber" value="@ViewBag.SearchTerm" autofocus class="form-control form-control-lg mb-3 w-100" style="max-width:800px;" placeholder="Enter your PO Number" required />
                         <button type="submit" class="btn btn-primary btn-lg px-5" >
                             <i class="bi bi-search me-2"></i>Search
                         </button>
@@ -25,12 +25,49 @@
                 <div class="alert alert-danger">@ViewBag.Error</div>
             }
 
+            @if (Model != null && Model.PoMatches != null && Model.PoMatches.Count > 0)
+            {
+                <div class="card shadow border-0 mt-4">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">PO Number: @Model.PoNumber</h4>
+                        <span class="fw-normal">@Model.PoMatches.Count job(s) found - select a Job Number to track</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-bordered mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Job Number</th>
+                                    <th>Customer</th>
+                                    <th>Part Name</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var match in Model.PoMatches)
+                                {
+                                    <tr>
+                                        <td>
+                                            <form asp-action="Search" method="post" class="d-inline">
+                                                <input type="hidden" name="jobNumber" value="@match.JobNumber" />
+                                                <button type="submit" class="btn btn-link p-0 text-decoration-none fw-bold">@match.JobNumber</button>
+                                            </form>
+                                        </td>
+                                        <td>@match.CustomerName</td>
+                                        <td>@match.PartName</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+
             @if (Model != null && !string.IsNullOrEmpty(Model.JobNumber))
             {
                 <div class="card shadow border-0 mt-4">
                     <div class="card-header bg-primary text-white">
                         <h4 class="mb-0">Process: @Model.Process</h4>
                         <span class="fw-normal">Job Number: @Model.JobNumber</span>
+                        <span class="fw-normal">| PO Number: @Model.PoNumber</span>
                     </div>
                     <div class="card-body p-0">
                         <table class="table table-bordered mb-0">

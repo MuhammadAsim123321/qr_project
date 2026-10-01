@@ -41,21 +41,64 @@ namespace Identity_Login.Controllers
         [HttpPost]
         public async Task<IActionResult> Search(string jobNumber)
         {
-            if (string.IsNullOrWhiteSpace(jobNumber))
+            var searchTerm = (jobNumber ?? string.Empty).Trim();
+
+            if (string.IsNullOrWhiteSpace(searchTerm))
             {
-                ViewBag.Error = "Please enter a Job Number.";
+                ViewBag.Error = "Please enter a Job Number or PO Number.";
                 return View();
             }
 
             // Find the job by JobNumber
             var job = await _context.RouterJobs
-                .FirstOrDefaultAsync(j => j.JobNumber == jobNumber);
+                .FirstOrDefaultAsync(j => j.JobNumber == searchTerm);
 
             if (job == null)
             {
-                ViewBag.Error = "No job found with this Job Number.";
+                // Not a Job Number, so try the PO Number (stored in VerbalNo).
+                // The column is read live, so an updated PO Number is matched on the next search.
+                var poMatches = await _context.RouterJobs
+                    .Where(j => j.VerbalNo == searchTerm)
+                    .OrderByDescending(j => j.JobId)
+                    .Select(j => new CustomerPoMatchVm
+                    {
+                        JobId = j.JobId,
+                        JobNumber = j.JobNumber,
+                        CustomerName = j.CustomerName,
+                        PartName = j.PartName
+                    })
+                    .ToListAsync();
+
+                if (poMatches.Count == 0)
+                {
+                    ViewBag.Error = "No job found with this Job Number or PO Number.";
+                    ViewBag.SearchTerm = searchTerm;
+                    return View();
+                }
+
+                // One PO Number can cover several jobs, so let the customer pick the Job Number.
+                if (poMatches.Count > 1)
+                {
+                    return View(new CustomerJobSearchViewModel
+                    {
+                        SearchTerm = searchTerm,
+                        PoNumber = searchTerm,
+                        PoMatches = poMatches
+                    });
+                }
+
+                job = await _context.RouterJobs
+                    .FirstOrDefaultAsync(j => j.JobId == poMatches[0].JobId);
+            }
+
+            if (job == null)
+            {
+                ViewBag.Error = "No job found with this Job Number or PO Number.";
+                ViewBag.SearchTerm = searchTerm;
                 return View();
             }
+
+            ViewBag.SearchTerm = searchTerm;
 
             // Find the process via mapping: JobProcessStage → ProcessStep → JobProcess
             var jobProcessStage = await _context.JobProcessStages
@@ -124,6 +167,8 @@ namespace Identity_Login.Controllers
             var vm = new CustomerJobSearchViewModel
             {
                 JobNumber = job.JobNumber,
+                PoNumber = job.VerbalNo,
+                SearchTerm = searchTerm,
                 Process = process.Name,
                 Steps = stepsVm
             };
