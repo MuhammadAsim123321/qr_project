@@ -7,7 +7,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - QR-Scanner</title>
+    <title>@ViewData["Title"] - QTA Back Order Report</title>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
@@ -33,20 +33,36 @@
 
         .sidebar .navbar-brand {
         color: #fff !important;
-        font-size: 1.5rem;
+        font-size: 1rem;
         font-weight: bold;
-        margin-bottom: 2rem;
+        margin: 0 0 1.5rem 0;
         display: flex;
         align-items: center;
         justify-content: center;
-        height: 70px;
+        gap: 0.5rem;
+        min-height: 70px;
+        height: auto;
+        padding: 0.75rem;
         width: 100%;
         border-bottom: 1px solid rgba(255,255,255,0.1);
+        text-align: center;
+        line-height: 1.25;
+        white-space: normal;
+        overflow-wrap: break-word;
         }
 
         .sidebar .navbar-brand i {
-        font-size: 2rem;
-        margin-right: 0.5rem;
+        font-size: 1.75rem;
+        flex: 0 0 auto;
+        }
+
+        .sidebar .navbar-brand .brand-text {
+        display: block;
+        font-size: 1rem;
+        font-weight: bold;
+        line-height: 1.25;
+        white-space: normal;
+        min-width: 0;
         }
 
         .sidebar .nav-link {
@@ -98,15 +114,26 @@
 
         .topbar .navbar-brand {
         color: #fff !important;
-        font-size: 1.5rem;
+        font-size: 1.25rem;
         font-weight: bold;
         display: flex;
         align-items: center;
+        gap: 0.5rem;
+        min-height: 70px;
+        height: auto;
+        padding: 0.5rem 0;
+        line-height: 1.25;
+        white-space: normal;
         }
 
         .topbar .navbar-brand i {
-        font-size: 2rem;
-        margin-right: 0.5rem;
+        font-size: 1.75rem;
+        flex: 0 0 auto;
+        }
+
+        .topbar .navbar-brand .brand-text {
+        display: block;
+        white-space: normal;
         }
 
         .topbar .menu-toggle, .topbar .user-toggle {
@@ -145,6 +172,12 @@
         .topbar .dropdown-menu {
         min-width: 180px;
         }
+
+        /* Keep the login/logout group on the right even when the brand is hidden
+           (space-between has no space to distribute with a single flex child). */
+        .topbar-actions {
+        margin-left: auto;
+        }
         /* Responsive styles */
         @@media (max-width: 991.98px) {
         .sidebar
@@ -166,7 +199,19 @@
         .topbar .navbar-brand
 
         {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
+        }
+
+        .topbar .navbar-brand i {
+        font-size: 1.4rem;
+        }
+
+        }
+        /* On large screens the sidebar already shows the name, so hide the duplicate top bar logo.
+           Without the sidebar (login page / non-admin) the top bar must keep showing it. */
+        @@media (min-width: 992px) {
+        body.has-sidebar .topbar .navbar-brand {
+        display: none;
         }
 
         }
@@ -215,14 +260,14 @@
 
     </style>
 </head>
-<body>
+<body class="@(SignInManager.IsSignedIn(User) && User.IsInRole("Admin") ? "has-sidebar" : "")">
     <!-- Topbar -->
     <div class="topbar d-flex align-items-center justify-content-between">
         <a class="navbar-brand" asp-area="" asp-controller="Customer" asp-action="Search">
             <i class="bi bi-qr-code-scan"></i>
-            QR-Scanner
+            <span class="brand-text">QTA Back Order Report</span>
         </a>
-        <div class="d-flex align-items-center">
+        <div class="d-flex align-items-center topbar-actions">
             <!-- Hamburger menu for mobile -->
             @if (SignInManager.IsSignedIn(User) && User.IsInRole("Admin"))
             {
@@ -276,7 +321,7 @@
     <nav class="sidebar d-none d-lg-flex flex-column align-items-start">
             <a class="navbar-brand" asp-area="" asp-controller="Customer" asp-action="Search">
             <i class="bi bi-qr-code-scan"></i>
-            <span class="brand-text">QR-Scanner</span>
+            <span class="brand-text">QTA Back Order Report</span>
         </a>
         <ul class="nav flex-column w-100">
             <li class="nav-item">
@@ -312,7 +357,7 @@
                 <li class="nav-item">
                     <a class="nav-link" asp-area="" asp-controller="Search" asp-action="Index">
                         <i class="bi bi-bucket"></i>
-                        <span>Buckets</span>
+                        <span>Customers</span>
                     </a>
                 </li>
                 <li class="nav-item">
